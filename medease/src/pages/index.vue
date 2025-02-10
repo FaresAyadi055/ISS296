@@ -1,7 +1,7 @@
 <template>
-  <HelloWorld />
+  <navbar />
 </template>
 
 <script setup>
-  //
+  
 </script>
