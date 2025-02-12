@@ -9,7 +9,7 @@
 </v-btn>
 </template>
 <script setup>
-    import { doctorList } from '@/repos/DoctorList';
-    
+
+
 
 </script>
