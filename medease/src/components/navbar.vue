@@ -11,7 +11,7 @@
     <v-icon>
       <img src="@/assets/logo.png" alt="MedEase Logo" style="width: 50px; height: 50px;">
     </v-icon>
-    <v-btn text style="margin-left: 50px;">
+    <v-btn text href="/" style="margin-left: 50px;">
       Home
     </v-btn>
     <v-btn text href="/EmergencyTracking">
@@ -40,6 +40,9 @@ const drawer = ref(false);
 </script>
 
 <style scoped>
+.v-application {
+    background-color: white;
+  }
 .v-img {
     max-height: 40px;
 }

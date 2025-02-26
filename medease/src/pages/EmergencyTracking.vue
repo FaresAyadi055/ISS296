@@ -1,5 +1,14 @@
 <template>
-    Emergency Tracking Page
-</template>
-<script setup>
-</script>
+  <navbar />
+  </template>
+  
+  <script>
+  export default {
+    name: 'App'
+  }
+  </script>
+  
+  <style scoped>
+
+  </style>
+  

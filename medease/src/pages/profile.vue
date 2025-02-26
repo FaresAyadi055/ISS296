@@ -1,4 +1,4 @@
 <template>
-    Profile Page
+    <navbar></navbar>
 </template>
 <script setup></script>
