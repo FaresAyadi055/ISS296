@@ -1,4 +1,5 @@
 <template>
+<<<<<<< Updated upstream
   <navbar />
   </template>
   
@@ -11,3 +12,10 @@
   <style scoped>
   </style>
   
+=======
+    Booking Page123
+</template>
+<script setup>
+
+</script>
+>>>>>>> Stashed changes
