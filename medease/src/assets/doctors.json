@@ -99,7 +99,7 @@
         "description": "Neurologist in Sfax with a rating: 4.7/5.0",
         "image": "https://cdn.prod.website-files.com/62d4f06f9c1357a606c3b7ef/65ddf3cdf19abaf5688af2f8_shutterstock_1933145801%20(1).jpg",
         "specialty": "Neurologist",
-        "location": "Sfax",
+        "location": "Bizerte",
         "rating": 4.7
       },
       {
@@ -130,7 +130,7 @@
     
     "categories": {
       "Speciality": ["Dermatologist", "Cardiologist", "Endocrinologist", "Gastroenterologist", "Hematologist", "Neurologist", "Pediatrician", "Obstetrician", "Psychiatrist", "Ophthalmologist", "Otolaryngologist"],
-      "Location": ["Tunis", "Beja", "Bizerte", "Zaghouan", "Nabeul", "Sousse", "Kairouan", "Monastir", "Mahdia", "Jendouba", "Beja", "Siliana", "Kef", "Kasserine", "Sidi Bouzid", "Sfax", "Gafsa", "Gabes", "Tozeur", "Kebili", "Medenine", "Tataouine"]
+      "Location": ["Tunis", "Bizerte", "Zaghouan", "Nabeul", "Sousse", "Kairouan", "Monastir", "Mahdia", "Jendouba", "Beja", "Siliana", "Kef", "Kasserine", "Sidi Bouzid", "Sfax", "Gafsa", "Gabes", "Tozeur", "Kebili", "Medenine", "Tataouine"]
       
     }
   }
