@@ -9,9 +9,5 @@
   </script>
   
   <style scoped>
-  /* Apply background color to the entire app */
-  .v-application {
-    background-color: white;
-  }
   </style>
   
