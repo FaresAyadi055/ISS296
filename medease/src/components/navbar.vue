@@ -1,46 +1,23 @@
 <template>
-  <v-app-bar
-    app
-    color="#6CAEED"
-  >
-    <v-app-bar-nav-icon @click="drawer = !drawer" style="margin-right: 40px;">
-      <v-icon>
-      <img src="@/assets/menu.png" alt="Menu Icon" style="width: 24px; height: 24px;">
-      </v-icon>
-    </v-app-bar-nav-icon>
-    <v-icon>
-      <img src="@/assets/logo.png" alt="MedEase Logo" style="width: 50px; height: 50px;">
-    </v-icon>
-    <v-btn text style="margin-left: 50px;">
-      Home
-    </v-btn>
-    <v-btn text href="/EmergencyTracking">
-      Emergency Tracking
-    </v-btn>
+  <v-app-bar app color="#0a1930" dark>
+    <v-toolbar-title class="font-weight-bold mr-4" style="color: #D5DE58;">MedEase.</v-toolbar-title>
+    
+    <v-btn class="mx-2" rounded style="background-color: #579AFE; color: #FFFFFF;" to="/">Home</v-btn>
+    <v-btn class="mx-2" rounded style="background-color: #579AFE; color: #FFFFFF;" to="/emergency-tracking">Emergency Tracking</v-btn>
+    <v-btn class="mx-2" rounded style="background-color: #579AFE; color: #FFFFFF;" to="/booking">Booking</v-btn>
+    
     <v-spacer></v-spacer>
-    <v-btn text href="/booking">
-      Booking
-      <v-icon>
-      <img src="@/assets/booking.png" alt="Booking Icon" style="width: 20px; height: 20px; margin-left: 10px;">
-      </v-icon>
-    </v-btn>
-    <v-btn icon href="/profile">
-      <v-avatar
-      image="@/assets/profile.png"
-      size="30"
-      />
-    </v-btn>
+    
+    <v-btn class="mx-2" color="#579AFE" rounded style="background-color: #579AFE; color: #FFFFFF;" to="/signin">SignIn</v-btn>
   </v-app-bar>
 </template>
 
-<script setup>
-import { ref } from 'vue';
-
-const drawer = ref(false);
+<script>
+export default {
+  name: "NavBar",
+};
 </script>
 
 <style scoped>
-.v-img {
-    max-height: 40px;
-}
+
 </style>
