@@ -11,10 +11,16 @@ import { routes } from 'vue-router/auto-routes'
 
 // Import components for manual routes
 
+import BookingPage from "@/pages/BookingPage.vue";
+import Booking from '@/pages/booking.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes: setupLayouts(routes),
+  routes: setupLayouts([
+    ...routes, // Keep auto-generated routes
+    { path: "/", component: Booking },
+    { path: "/booking/:id", component: BookingPage, props: true }
+  ]),
 })
 
 // Workaround for https://github.com/vitejs/vite/issues/11804
@@ -35,7 +41,5 @@ router.onError((err, to) => {
 router.isReady().then(() => {
   localStorage.removeItem('vuetify:dynamic-reload')
 })
-
-
 
 export default router
