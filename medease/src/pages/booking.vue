@@ -1,4 +1,3 @@
-
 <template>
   <navbar />
   <v-container>
@@ -73,40 +72,33 @@
   <Footer />
 </template>
 
-<script>
+<script setup>
+import { ref, computed } from 'vue';
 import doctorsData from "@/repos/doctorsBooking.json";
 import Footer from "@/components/footer.vue";
 
-export default {
-  data() {
-    return {
-      expandedIndex: null,
-      selectedCategories: [],
-      selectedSubcategories: [],
-      sortByRating: false,
-      categories: doctorsData.categories,
-      doctors: doctorsData.doctors
-    };
-  },
-  computed: {
-    filteredDoctors() {
-      let filtered = this.doctors.filter(doctor => {
-        return (
-          (this.selectedCategories.includes("Speciality") ? this.selectedSubcategories.includes(doctor.specialty) : true) &&
-          (this.selectedCategories.includes("Location") ? this.selectedSubcategories.includes(doctor.location) : true)
-        );
-      });
+const expandedIndex = ref(null);
+const selectedCategories = ref([]);
+const selectedSubcategories = ref([]);
+const sortByRating = ref(false);
+const categories = doctorsData.categories;
+const doctors = doctorsData.doctors;
 
-      if (this.sortByRating) {
-        return filtered.sort((a, b) => b.rating - a.rating);
-      }
-      return filtered;
-    }
-  },
-  methods: {
-    toggleExpand(index) {
-      this.expandedIndex = this.expandedIndex === index ? null : index;
-    }
+const filteredDoctors = computed(() => {
+  let filtered = doctors.filter(doctor => {
+    return (
+      (selectedCategories.value.includes("Speciality") ? selectedSubcategories.value.includes(doctor.specialty) : true) &&
+      (selectedCategories.value.includes("Location") ? selectedSubcategories.value.includes(doctor.location) : true)
+    );
+  });
+
+  if (sortByRating.value) {
+    return filtered.sort((a, b) => b.rating - a.rating);
   }
+  return filtered;
+});
+
+const toggleExpand = (index) => {
+  expandedIndex.value = expandedIndex.value === index ? null : index;
 };
 </script>
