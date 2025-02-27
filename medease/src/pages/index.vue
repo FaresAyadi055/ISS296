@@ -104,6 +104,7 @@ import Footer from '@/components/footer.vue'
 import doctorIllustration from '@/assets/doctor-illustration.png'
 import heartIcon from '@/assets/heart-icon.png'
 import calendarIcon from '@/assets/calendar-icon.png'
+
 </script>
 
 <style scoped>

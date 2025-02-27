@@ -1,11 +1,5 @@
 
 <template>
-<<<<<<< HEAD
-  <div class="booking-page">
-    <h1>Booking Page</h1>
-    <!-- Add booking form or other content here -->
-  </div>
-=======
   <navbar />
   <v-container>
     <v-row>
@@ -76,11 +70,12 @@
       </v-col>
     </v-row>
   </v-container>
->>>>>>> 20e72626d36f52bc0cb1a686983a743f30e58aeb
+  <Footer />
 </template>
 
 <script>
 import doctorsData from "@/repos/doctorsBooking.json";
+import Footer from "@/components/footer.vue";
 
 export default {
   data() {

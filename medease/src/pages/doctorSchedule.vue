@@ -1,4 +1,5 @@
 <template>
+    <navbardoctor />
     <div class="schedule-container">
       <h2 class="title">Doctor's Schedule</h2>
       <div class="schedule-grid">
@@ -31,7 +32,8 @@
   </template>
   
   <script>
-  import patientsData from "@/patient.json";
+  import patientsData from "@/repos/patient.json";
+  import Footer from "@/components/footer.vue";
   
   export default {
     data() {
