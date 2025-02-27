@@ -1,9 +1,12 @@
 <template>
-    Booking Page
+    <navbar />
     <addDoctor/>
+    <Footer />
 </template>
 <script setup>
 import addDoctor from '@/components/addDoctor.vue';
+import addPatient from '@/components/addPatient.vue';
+import Footer from '@/components/footer.vue';
 //import AddPatient from '@/components/addPatient.vue';
 
 
