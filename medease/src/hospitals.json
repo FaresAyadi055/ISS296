@@ -1,0 +1,115 @@
+{
+    "hospitals": [
+      {
+        "id": 1,
+        "name": "Clinique Pasteur",
+        "city": "Tunis",
+        "address": "Avenue Habib Bourguiba, Tunis",
+        "phone": "+216 71 123 456",
+        "location": {
+          "latitude": 36.8065,
+          "longitude": 10.1815
+        }
+      },
+      {
+        "id": 2,
+        "name": "Hôpital Militaire de Tunis",
+        "city": "Tunis",
+        "address": "Tunis, Tunisia",
+        "phone": "+216 71 987 654",
+        "location": {
+          "latitude": 36.8137,
+          "longitude": 10.1563
+        }
+      },
+      {
+        "id": 3,
+        "name": "Clinique La Soukra",
+        "city": "Ariana",
+        "address": "Ariana, Tunisia",
+        "phone": "+216 71 654 321",
+        "location": {
+          "latitude": 36.8606,
+          "longitude": 10.1669
+        }
+      },
+      {
+        "id": 4,
+        "name": "Hôpital Charles Nicolle",
+        "city": "Tunis",
+        "address": "Tunis, Tunisia",
+        "phone": "+216 71 456 789",
+        "location": {
+          "latitude": 36.8184,
+          "longitude": 10.1788
+        }
+      },
+      {
+        "id": 5,
+        "name": "Hôpital de la Rabta",
+        "city": "Tunis",
+        "address": "Avenue de la République, Tunis",
+        "phone": "+216 71 432 109",
+        "location": {
+          "latitude": 36.8440,
+          "longitude": 10.1665
+        }
+      },
+      {
+        "id": 6,
+        "name": "Clinique El Manar",
+        "city": "Tunis",
+        "address": "Tunis, Tunisia",
+        "phone": "+216 71 234 567",
+        "location": {
+          "latitude": 36.8706,
+          "longitude": 10.1883
+        }
+      },
+      {
+        "id": 7,
+        "name": "Hôpital Razi",
+        "city": "Mourouj",
+        "address": "Mourouj, Tunisia",
+        "phone": "+216 71 666 555",
+        "location": {
+          "latitude": 36.7641,
+          "longitude": 10.2267
+        }
+      },
+      {
+        "id": 8,
+        "name": "Clinique Sfax",
+        "city": "Sfax",
+        "address": "Sfax, Tunisia",
+        "phone": "+216 74 123 987",
+        "location": {
+          "latitude": 34.7401,
+          "longitude": 10.7611
+        }
+      },
+      {
+        "id": 9,
+        "name": "Clinique El Menzah",
+        "city": "Tunis",
+        "address": "El Menzah, Tunis",
+        "phone": "+216 71 245 678",
+        "location": {
+          "latitude": 36.8541,
+          "longitude": 10.1773
+        }
+      },
+      {
+        "id": 10,
+        "name": "Clinique El Menzah 5",
+        "city": "Tunis",
+        "address": "Tunis, Tunisia",
+        "phone": "+216 71 111 222",
+        "location": {
+          "latitude": 36.8665,
+          "longitude": 10.1700
+        }
+      }
+    ]
+  }
+  
