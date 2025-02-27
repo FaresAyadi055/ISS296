@@ -1,145 +1,109 @@
 <template>
   <navbar />
-  <v-app style="background-color: #f8fafc;">
-  
   <v-container>
     <v-row>
-      <!-- Sidebar Filters (Left) -->
+      <!-- Sidebar Filters -->
       <v-col cols="12" md="3">
         <v-card class="pa-4">
           <v-card-title>Filters</v-card-title>
           <v-divider></v-divider>
 
-          <!-- Specialty Filter -->
-          <v-checkbox
-            v-model="selectedSpecialties"
-            :label="'Specialty'"
-            :value="'Specialty'"
-            hide-details
-            dense
-          ></v-checkbox>
-          <v-expand-transition>
-            <div v-if="selectedSpecialties.length > 0" class="ml-4">
-              <v-checkbox
-                v-for="specialty in categories.Speciality"
-                :key="specialty"
-                v-model="selectedSubcategories.specialty"
-                :label="specialty"
-                :value="specialty"
-                hide-details
-                dense
-              ></v-checkbox>
-            </div>
-          </v-expand-transition>
+          <div v-for="(subcategories, category) in categories" :key="category">
+            <v-checkbox
+              v-if="category !== 'rating'"
+              v-model="selectedCategories"
+              :label="category"
+              :value="category"
+              hide-details
+              dense
+            ></v-checkbox>
 
-          <!-- Location Filter -->
-          <v-checkbox
-            v-model="selectedLocations"
-            :label="'Location'"
-            :value="'Location'"
-            hide-details
-            dense
-          ></v-checkbox>
-          <v-expand-transition>
-            <div v-if="selectedLocations.length > 0" class="ml-4">
-              <v-checkbox
-                v-for="location in categories.Location"
-                :key="location"
-                v-model="selectedSubcategories.location"
-                :label="location"
-                :value="location"
-                hide-details
-                dense
-              ></v-checkbox>
-            </div>
-          </v-expand-transition>
+            <v-expand-transition>
+              <div v-if="selectedCategories.includes(category)" class="ml-4">
+                <v-checkbox
+                  v-for="subcategory in subcategories"
+                  :key="subcategory"
+                  v-model="selectedSubcategories"
+                  :label="subcategory"
+                  :value="subcategory"
+                  hide-details
+                  dense
+                ></v-checkbox>
+              </div>
+            </v-expand-transition>
+          </div>
 
-          <!-- Rating Filter (Sort By Rating) -->
+          <!-- Rating Sorting Checkbox -->
           <v-checkbox
             v-model="sortByRating"
-            :label="'Sort by Rating'"
+            label="Sort by Rating"
             hide-details
             dense
           ></v-checkbox>
         </v-card>
       </v-col>
 
-      <!-- Items List (Right) -->
+      <!-- Doctors List -->
       <v-col cols="12" md="9">
         <v-row>
-          <v-col v-for="(doctor, index) in filteredItems" :key="index" cols="12" sm="6" md="4">
+          <v-col v-for="(doctor, index) in filteredDoctors" :key="index" cols="12" sm="6" md="4">
             <v-card class="pa-3">
-              <!-- Profile Picture -->
               <v-img :src="doctor.image" height="150px" contain></v-img>
-
-              <!-- Details -->
               <v-card-title>{{ doctor.name }}</v-card-title>
+              <v-card-subtitle>{{ doctor.specialty }} - {{ doctor.location }}</v-card-subtitle>
+              <v-card-text>⭐ {{ doctor.rating.toFixed(1) }}/5.0</v-card-text>
 
-              <!-- Expandable description -->
+              <v-card-actions>
+                <v-btn color="info" @click="toggleExpand(index)">See more</v-btn>
+                <v-btn color="primary" :to="'/booking/' + (index + 1)">Book</v-btn>
+              </v-card-actions>
+
               <v-expand-transition>
                 <v-card-text v-if="expandedIndex === index">
                   {{ doctor.description }}
                 </v-card-text>
               </v-expand-transition>
-
-              <v-card-actions>
-                <v-btn color="info" @click="toggleExpand(index)">See more</v-btn>
-                <v-btn color="primary">Book</v-btn>
-              </v-card-actions>
             </v-card>
           </v-col>
         </v-row>
       </v-col>
     </v-row>
   </v-container>
-  <Footer />
-  </v-app>
 </template>
 
-<script setup>
-import { ref, computed } from 'vue';
-import doctorsData from '@/repos/doctorsBooking.json'; // Import the JSON file
-import Footer from '@/components/footer.vue';
+<script>
+import doctorsData from "@/repos/doctorsBooking.json";
 
-const expandedIndex = ref(null); // Track expanded item
-const selectedSpecialties = ref([]);
-const selectedLocations = ref([]);
-const sortByRating = ref(false); // To toggle sorting by rating
-const selectedSubcategories = ref({
-  specialty: [],
-  location: [],
-});
-const categories = doctorsData.categories; // Load categories from the JSON
-const doctors = doctorsData.doctors; // Load doctors data from the JSON
+export default {
+  data() {
+    return {
+      expandedIndex: null,
+      selectedCategories: [],
+      selectedSubcategories: [],
+      sortByRating: false,
+      categories: doctorsData.categories,
+      doctors: doctorsData.doctors
+    };
+  },
+  computed: {
+    filteredDoctors() {
+      let filtered = this.doctors.filter(doctor => {
+        return (
+          (this.selectedCategories.includes("Speciality") ? this.selectedSubcategories.includes(doctor.specialty) : true) &&
+          (this.selectedCategories.includes("Location") ? this.selectedSubcategories.includes(doctor.location) : true)
+        );
+      });
 
-const filteredItems = computed(() => {
-  let filtered = doctors.filter(doctor => {
-    const specialtyMatch = selectedSubcategories.value.specialty.length > 0 ? selectedSubcategories.value.specialty.includes(doctor.specialty) : true;
-    const locationMatch = selectedSubcategories.value.location.length > 0 ? selectedSubcategories.value.location.includes(doctor.location) : true;
-
-    return specialtyMatch && locationMatch;
-  });
-
-  // If the sortByRating is checked, sort the list by rating
-  if (sortByRating.value) {
-    filtered = filtered.sort((a, b) => b.rating - a.rating); // Sort numerically based on rating
+      if (this.sortByRating) {
+        return filtered.sort((a, b) => b.rating - a.rating);
+      }
+      return filtered;
+    }
+  },
+  methods: {
+    toggleExpand(index) {
+      this.expandedIndex = this.expandedIndex === index ? null : index;
+    }
   }
-
-  return filtered;
-});
-
-const toggleExpand = (index) => {
-  expandedIndex.value = expandedIndex.value === index ? null : index;
 };
 </script>
-
-<style scoped>
-/* Smooth transition */
-.v-enter-active, .v-leave-active {
-  transition: all 0.3s ease;
-}
-.v-enter, .v-leave-to {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-</style>
