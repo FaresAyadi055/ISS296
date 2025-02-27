@@ -1,4 +1,5 @@
 <template>
+<<<<<<< Updated upstream
   <navbar />
   <v-container>
     <v-row>
@@ -7,6 +8,11 @@
         <v-card class="pa-4">
           <v-card-title>Filters</v-card-title>
           <v-divider></v-divider>
+=======
+    Booking Page123
+</template>
+<script setup>
+>>>>>>> Stashed changes
 
           <!-- Specialty Filter -->
           <v-checkbox
