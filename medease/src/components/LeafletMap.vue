@@ -55,7 +55,7 @@ export default {
 
     // Programmatically search for "hospitals"
     searchHospitals() {
-      const query = 'hospitals near London';
+      const query = 'hospitals near Tunis';
 
       // Use the geocoder to search for the query
       this.geocoder.geocode(query, (results) => {
