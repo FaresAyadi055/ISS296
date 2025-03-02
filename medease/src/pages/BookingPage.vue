@@ -1,4 +1,5 @@
 <template>
+   <navbar />
   <v-container>
     <v-btn to="/" class="mb-3">Back</v-btn>
     <h1>Schedule for {{ doctorName }}</h1>
