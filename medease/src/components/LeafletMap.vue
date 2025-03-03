@@ -29,7 +29,6 @@ export default {
   mounted() {
     this.initMap();
     this.addGeocoder();
-    this.searchHospitals();
   },
   methods: {
     // Initialize the map
@@ -54,28 +53,7 @@ export default {
     },
 
     // Programmatically search for "hospitals"
-    searchHospitals() {
-      const query = 'hospitals near Tunis';
 
-      // Use the geocoder to search for the query
-      this.geocoder.geocode(query, (results) => {
-        if (results.length > 0) {
-          // Center the map on the first result
-          const firstResult = results[0];
-          this.map.setView(firstResult.center, 13);
-
-          // Add markers for all results (using the default red marker)
-          results.forEach((result) => {
-            const { center, name } = result;
-            L.marker(center) // No custom icon, so it uses the default red marker
-              .addTo(this.map)
-              .bindPopup(`<b>${name}</b>`);
-          });
-        } else {
-          console.warn('No hospitals found.');
-        }
-      });
-    },
   },
   beforeDestroy() {
     // Clean up the map instance when the component is destroyed
@@ -91,7 +69,6 @@ export default {
   background: white; /* Set the background of the parent container to white */
   padding: 16px; /* Optional: Add padding */
   border-radius: 8px; /* Optional: Add rounded corners */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Optional: Add a shadow */
 }
 
 .leaflet-map {
