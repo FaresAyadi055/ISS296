@@ -12,7 +12,7 @@
             </v-btn>
           </div>
           <hr style="border: 1px solid black;"/>
-          <v-card-title class="text-center text-blue-800">Patient Signin</v-card-title>
+          <v-card-title class="text-center text-blue-800">Patient Sign in</v-card-title>
   
           <v-form @submit.prevent="handleLogin">
             <v-text-field 
@@ -29,7 +29,7 @@
               required>
             </v-text-field>
   
-            <v-btn type="submit" color="primary" block class="login-button">Signin</v-btn>
+            <v-btn type="submit" color="primary" block class="login-button">Sign in</v-btn>
             
             <p class="text-center mt-4">
               Don't have an account? 
@@ -122,7 +122,7 @@
   
             <p class="text-center mt-4">
               Already have an account? 
-              <v-btn @click="showRegister = false" text class="login-button">Signin</v-btn>
+              <v-btn @click="showRegister = false" text class="login-button">Sign in</v-btn>
             </p>
           </v-form>
         </v-card>

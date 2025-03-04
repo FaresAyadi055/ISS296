@@ -1,19 +1,19 @@
-<template>
+<template> 
+  <v-app style="background-color: white;">
     <v-container>
-    <v-row>
-      <v-col cols="12">
-        <h1>Hospitals map</h1>
-      </v-col>
-    </v-row>
+      <v-row>
+        <v-col cols="12">
+          <h1>Hospitals Map</h1>
+        </v-col>
+      </v-row>
 
+      <leaflet-map :center="mapCenter" :zoom="mapZoom" :markers="mapMarkers" />
+    </v-container>
 
-    <leaflet-map :center="mapCenter" :zoom="mapZoom" :markers="mapMarkers" />
-  </v-container>
-  <v-app style="background-color: #F4F8FB;"></v-app>
-
-  <Navbar />
-  <sync-dialog></sync-dialog>
-  <Footer />
+    <Navbar />
+    <sync-dialog></sync-dialog>
+    <Footer />
+  </v-app>
 </template>
 
 <script setup>
@@ -25,7 +25,6 @@ import LeafletMap from '@/components/LeafletMap.vue'
 
 <script>
 export default {
-
   name: 'App',
   components: {
     LeafletMap,
@@ -40,7 +39,6 @@ export default {
           lng: 10.16074,
           popupText: 'Hello, this is Tunis!',
         },
-
       ],
     };
   },
@@ -48,4 +46,8 @@ export default {
 </script>
 
 <style scoped>
+/* Ensure the entire app background is white */
+.v-application {
+  background-color: white !important;
+}
 </style>

@@ -1,34 +1,52 @@
-<template>
-   <navbar />
-  <v-container>
-    <v-btn to="/" class="mb-3">Back</v-btn>
-    <h1>Schedule for {{ doctorName }}</h1>
-    
-    <v-row>
-      <v-col cols="12" class="d-flex justify-space-between">
-        <v-btn @click="prevWeek">Previous Week</v-btn>
-        <h2>Week of {{ formattedWeek }}</h2>
-        <v-btn @click="nextWeek">Next Week</v-btn>
-      </v-col>
-    </v-row>
+<template>  
+  <v-app style="background-color: white;">
+    <navbar />
 
-    <v-table>
-      <thead>
-        <tr>
-          <th>Day</th>
-          <th>Available Time Slots</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(times, day) in schedule" :key="day">
-          <td>{{ day }}</td>
-          <td>
-            <v-chip v-for="(time, index) in times" :key="index" class="ma-1">{{ time }}</v-chip>
-          </td>
-        </tr>
-      </tbody>
-    </v-table>
-  </v-container>
+    <v-container>
+      <v-btn to="/" class="mb-3" color="primary">Back</v-btn>
+
+      <h1 class="text-primary text-center font-weight-bold">
+        Schedule for {{ doctorName }}
+      </h1>
+
+      <v-row class="my-4">
+        <v-col cols="12" class="d-flex justify-space-between align-center">
+          <v-btn @click="prevWeek" color="primary">Previous Week</v-btn>
+          <h2 class="text-blue-darken-2 font-weight-medium">Week of {{ formattedWeek }}</h2>
+          <v-btn @click="nextWeek" color="primary">Next Week</v-btn>
+        </v-col>
+      </v-row>
+
+      <v-table class="custom-table">
+        <thead>
+          <tr>
+            <th class="text-blue-darken-1">Day</th>
+            <th class="text-blue-darken-1">Available Time Slots</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr 
+            v-for="(times, day, index) in schedule" 
+            :key="day"
+            :class="{ 'table-row-alt': index % 2 !== 0 }"
+          >
+            <td class="text-blue-grey-darken-3 font-weight-medium">{{ day }}</td>
+            <td>
+              <v-chip 
+                v-for="(time, i) in times" 
+                :key="i" 
+                class="ma-1" 
+                color="primary" 
+                text-color="white"
+              >
+                {{ time }}
+              </v-chip>
+            </td>
+          </tr>
+        </tbody>
+      </v-table>
+    </v-container>
+  </v-app>
 </template>
 
 <script setup>
@@ -66,4 +84,46 @@ function prevWeek() {
   schedule.value = generateWeeklySchedule();
 }
 </script>
-  
+
+<style scoped>
+/* Table header */
+th {
+  background-color: #E3F2FD !important; /* Soft blue */
+  color: #1976D2 !important; /* Vuetify blue */
+  font-weight: bold;
+  border: none !important; /* No border */
+}
+
+/* Alternating row colors */
+.table-row-alt {
+  background-color: #FFFFFF !important; /* White background for alternating rows */
+}
+
+/* Table cell content */
+td {
+  color: #607D8B !important; /* Blue-gray */
+  font-weight: 500;
+  border: none !important; /* No border */
+  background-color: white !important; /* No background color */
+}
+
+/* Remove any other default black color */
+v-table, v-chip, v-btn {
+  color: inherit !important; /* Ensures no black color inheritance */
+}
+
+v-chip {
+  background-color: #1976D2 !important; /* Blue background for chips */
+  color: white !important; /* Text in white */
+}
+
+v-btn {
+  color: #1976D2 !important; /* Button text in blue */
+  border-color: #1976D2 !important; /* Button border in blue */
+}
+
+/* Ensure no black text anywhere */
+h1, h2 {
+  color: #1976D2 !important; /* Blue text */
+}
+</style>

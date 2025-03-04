@@ -8,7 +8,7 @@
     
     <v-spacer></v-spacer>
     
-    <v-btn class="mx-2" color="#579AFE" rounded style="background-color: #579AFE; color: #FFFFFF;" to="/signin">SignIn</v-btn>
+    <v-btn class="mx-2" color="#579AFE" rounded style="background-color: #579AFE; color: #FFFFFF;" to="/signin">Sign In</v-btn>
   </v-app-bar>
 </template>
 

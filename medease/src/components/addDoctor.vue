@@ -2,7 +2,7 @@
   <v-app style="background-color: #f8fafc;">
     <v-container class="d-flex justify-center align-center">
       <v-card class="pa-6 max-width-800 text-black">
-        <v-card-title class="text-center text-blue-800">Doctor Login</v-card-title>
+        <v-card-title class="text-center text-blue-800">Doctor Registration</v-card-title>
 
         <v-form @submit.prevent="handleRequest">
           <!-- First Name -->
