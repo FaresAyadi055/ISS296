@@ -1,9 +1,18 @@
 <template>
-    <v-app>
+    <v-app style="background-color: #f8fafc;">
       <v-container class="d-flex justify-center align-center">
        
-        <v-card v-if="!showRegister" class="pa-6" max-width="400px">
-          <v-card-title class="text-center text-blue-800">Patient Login</v-card-title>
+        <v-card v-if="!showRegister" class="pa-6" max-width="400px" style="background-color: white;">
+          <div class="d-flex justify-center">
+            <v-btn 
+              class="mb-4" 
+              style="background-color: #D5DE58; color: black; border-radius: 5px;" 
+              to="/signIndoctor">
+              Are you a doctor?
+            </v-btn>
+          </div>
+          <hr style="border: 1px solid black;"/>
+          <v-card-title class="text-center text-blue-800">Patient Signin</v-card-title>
   
           <v-form @submit.prevent="handleLogin">
             <v-text-field 
@@ -20,17 +29,26 @@
               required>
             </v-text-field>
   
-            <v-btn type="submit" color="primary" block>Login</v-btn>
+            <v-btn type="submit" color="primary" block class="login-button">Signin</v-btn>
             
             <p class="text-center mt-4">
               Don't have an account? 
-              <v-btn @click="showRegister = true" text>Register</v-btn>
+              <v-btn @click="showRegister = true" text class="register-button">Register</v-btn>
             </p>
           </v-form>
         </v-card>
   
 
-        <v-card v-if="showRegister" class="pa-6" max-width="400px">
+        <v-card v-if="showRegister" class="pa-6" max-width="400px" style="background-color: white;">
+          <div class="d-flex justify-center">
+            <v-btn 
+              class="mb-4" 
+              style="background-color: #D5DE58; color: black; border-radius: 5px;" 
+              to="/signIndoctor">
+              Are you a doctor?
+            </v-btn>
+          </div>
+          <hr style="border: 1px solid black;"/>
           <v-card-title class="text-center text-blue-800">Patient Registration</v-card-title>
   
           <v-form @submit.prevent="handleRegister">
@@ -100,11 +118,11 @@
               outlined
             ></v-file-input>
   
-            <v-btn type="submit" color="primary" block>Register</v-btn>
+            <v-btn type="submit" color="primary" block class="register-button">Register</v-btn>
   
             <p class="text-center mt-4">
               Already have an account? 
-              <v-btn @click="showRegister = false" text>Login</v-btn>
+              <v-btn @click="showRegister = false" text class="login-button">Signin</v-btn>
             </p>
           </v-form>
         </v-card>
@@ -151,13 +169,21 @@
         hasAllergies,
         photo,
         handleLogin,
-        handleRegister
+        handleRegister,
       };
     }
   };
   </script>
   
   <style scoped>
-  
+  /* Set all text to black */
+  .v-card-title, .v-text-field, .v-checkbox, .v-textarea, p {
+      color: black;
+  }
+
+  /* Keep button text color as is */
+  .login-button, .register-button {
+      color: white; /* Assuming primary color is white */
+  }
   </style>
   

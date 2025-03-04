@@ -1,10 +1,10 @@
 <template>
     <navbar />
-    <addPatient/>
+    <addDoctor/>
     <Footer />
 </template>
 <script setup>
-import addPatient from '@/components/addPatient.vue';
+import addDoctor from '@/components/addDoctor.vue';
 import Footer from '@/components/footer.vue';
 //import AddPatient from '@/components/addPatient.vue';
 

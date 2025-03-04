@@ -1,10 +1,11 @@
 <template>
   <navbar />
+  <v-app style="background-color: #f8fafc;">
   <v-container>
     <v-row>
       <!-- Sidebar Filters -->
       <v-col cols="12" md="3">
-        <v-card class="pa-4">
+        <v-card class="pa-4" style="background-color: white; color: black;">
           <v-card-title>Filters</v-card-title>
           <v-divider></v-divider>
 
@@ -47,15 +48,15 @@
       <v-col cols="12" md="9">
         <v-row>
           <v-col v-for="(doctor, index) in filteredDoctors" :key="index" cols="12" sm="6" md="4">
-            <v-card class="pa-3">
+            <v-card class="pa-3" style="background-color: white; border-radius: 20px; color: black;">
               <v-img :src="doctor.image" height="150px" contain></v-img>
               <v-card-title>{{ doctor.name }}</v-card-title>
               <v-card-subtitle>{{ doctor.specialty }} - {{ doctor.location }}</v-card-subtitle>
               <v-card-text>⭐ {{ doctor.rating.toFixed(1) }}/5.0</v-card-text>
 
               <v-card-actions>
-                <v-btn color="info" @click="toggleExpand(index)">See more</v-btn>
-                <v-btn color="primary" :to="'/booking/' + (index + 1)">Book</v-btn>
+                <v-btn style="background-color: #6CACFC; color: white; border-radius: 20px;" @click="toggleExpand(index)">See more</v-btn>
+                <v-btn style="background-color: #6CACFC; color: white; border-radius: 20px;" :to="'/booking/' + (index + 1)">Book</v-btn>
               </v-card-actions>
 
               <v-expand-transition>
@@ -70,6 +71,7 @@
     </v-row>
   </v-container>
   <Footer />
+</v-app>
 </template>
 
 <script setup>
