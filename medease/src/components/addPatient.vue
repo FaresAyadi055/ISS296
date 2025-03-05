@@ -7,7 +7,7 @@
             <v-btn 
               class="mb-4" 
               style="background-color: #D5DE58; color: black; border-radius: 5px;" 
-              to="/signIndoctor">
+              to="/doctorSignin">
               Are you a doctor?
             </v-btn>
           </div>
