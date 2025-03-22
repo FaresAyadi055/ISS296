@@ -16,7 +16,7 @@
 
 
 <script setup>
-  import { doctorList } from '@/repos/DoctorList';
+  import { doctorList } from '@/repos/expDoctorList';
 
     const name ="toto";
     

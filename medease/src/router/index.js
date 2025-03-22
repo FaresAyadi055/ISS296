@@ -19,7 +19,10 @@ const router = createRouter({
   routes: setupLayouts([
     ...routes, // Keep auto-generated routes
     { path: "/", component: Booking },
-    { path: "/booking/:id", component: BookingPage, props: true }
+    {
+      path: "/booking/:doctorId",  // Change this to use doctorId
+      component: BookingPage,  // Component you want to display
+    }
   ]),
 })
 
