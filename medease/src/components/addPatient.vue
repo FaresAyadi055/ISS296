@@ -132,6 +132,7 @@
   
   <script>
   import { ref } from 'vue';
+  import patientData from '../repos/patient.js'; // Import patient data
   
   export default {
     setup() {
@@ -148,11 +149,28 @@
       const photo = ref(null);
   
       const handleLogin = () => {
-        console.log('Logging in with:', email.value, password.value);
+        const foundPatient = patientData.patients.find(patient => 
+          patient.email === email.value && patient.password === password.value
+        );
+        if (foundPatient) {
+          console.log('Patient logged in:', foundPatient);
+          // Redirect or perform login actions
+        } else {
+          alert('Login failed: Invalid email or password.');
+        }
       };
   
       const handleRegister = () => {
-        console.log('Registering:', fullName.value, regEmail.value, regPassword.value, healthConditions.value, photo.value);
+        const newPatient = {
+          id: patientData.patients.length + 1, // Simple ID generation
+          firstName: fullName.value.split(' ')[0],
+          lastName: fullName.value.split(' ')[1],
+          email: regEmail.value,
+          password: regPassword.value,
+          // Add other fields as necessary
+        };
+        patientData.patients.push(newPatient); // Add to the patient data
+        console.log('Registered new patient:', newPatient);
         showRegister.value = false;
       };
   

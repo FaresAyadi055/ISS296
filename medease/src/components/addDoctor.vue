@@ -53,6 +53,7 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
+import { doctorlist } from '../repos/doctors.js'; // Import doctor data
 
 // Form fields
 const firstName = ref("");
@@ -83,19 +84,21 @@ const initGoogleAutocomplete = () => {
 
 // Handle form submission
 const handleRequest = () => {
-  if (
-    firstName.value &&
-    lastName.value &&
-    address.value &&
-    specialty.value &&
-    phoneNumber.value &&
-    photo.value &&
-    location.value
-  ) {
-    dialog.value = true;
-  } else {
-    alert("Please fill out all the fields.");
-  }
+  const newDoctor = {
+    id: doctorlist.doctors.length + 1, // Simple ID generation
+    firstName: firstName.value,
+    lastName: lastName.value,
+    address: address.value,
+    specialty: specialty.value,
+    phoneNumber: phoneNumber.value,
+    photo: photo.value,
+    email: email.value, // Add email field
+    password: password.value, // Add password field
+  };
+  doctorlist.doctors.push(newDoctor); // Add to the doctor data
+  console.log("Doctor Request Sent:", newDoctor);
+  dialog.value = false;
+  alert("Your request has been sent successfully!");
 };
 
 // Confirm request

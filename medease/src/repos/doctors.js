@@ -7,6 +7,8 @@ export const doctorlist = reactive({
     {
       id: 1,
       name: "Dr. Kamel Ouertani",
+      email: "kamel.ouertani@example.com",
+      password: "passwordKamel",
       description: "Studied at University of Tunis and completed residency at Charles Nicolle Hospital",
       image: "https://thumbs.dreamstime.com/b/young-male-doctor-close-up-happy-looking-camera-56751540.jpg",
       specialty: "Endocrinologist",
@@ -25,6 +27,8 @@ export const doctorlist = reactive({
     {
       id: 2,
       name: "Dr. Leila Masmoudi",
+      email: "leila.masmoudi@example.com",
+      password: "passwordLeila",
       description: "Studied at University of Sfax and completed residency at Habib Bourguiba University Hospital",
       image: "https://t3.ftcdn.net/jpg/05/04/25/70/360_F_504257032_jBtwqNdvdMN9Xm6aDT0hcvtxDXPZErrn.jpg",
       specialty: "Ophthalmologist",
@@ -43,6 +47,8 @@ export const doctorlist = reactive({
     {
       id: 3,
       name: "Dr. John Doe",
+      email: "john.doe@example.com",
+      password: "passwordJohn",
       description: "Studied at University of Monastir and completed residency at Farhat Hached University Hospital",
       image: "https://hips.hearstapps.com/hmg-prod/images/portrait-of-a-happy-young-doctor-in-his-clinic-royalty-free-image-1661432441.jpg?crop=0.66698xw:1xh;center,top&resize=640:*",
       specialty: "Cardiologist",
@@ -61,6 +67,8 @@ export const doctorlist = reactive({
     {
       id: 4,
       name: "Dr. Sarah Smith",
+      email: "sarah.smith@example.com",
+      password: "passwordSarah",
       description: "Studied at University of Sfax and completed residency at Sfax University Hospital",
       image: "https://img.freepik.com/free-photo/beautiful-young-female-doctor-looking-camera-office_1301-7807.jpg",
       specialty: "Neurologist",
@@ -79,6 +87,8 @@ export const doctorlist = reactive({
     {
       id: 5,
       name: "Dr. Ahmed Khaled",
+      email: "ahmed.khaled@example.com",
+      password: "passwordAhmed",
       description: "Studied at University of Tunis El Manar and completed residency at Rabta Hospital",
       image: "https://media.istockphoto.com/id/1346124900/photo/confident-successful-mature-doctor-at-hospital.jpg?s=612x612&w=0&k=20&c=S93n5iTDVG3_kJ9euNNUKVl9pgXTOdVQcI_oDGG-QlE=",
       specialty: "Cardiologist",
@@ -97,6 +107,8 @@ export const doctorlist = reactive({
     {
       id: 6,
       name: "Dr. Zied Ladhari",
+      email: "zied.ladhari@example.com",
+      password: "passwordZied",
       description: "Studied at University of Sousse and completed residency at Sahloul University Hospital",
       image: "https://nmc.ae/_next/image?url=https%3A%2F%2Fstatic-cdn.nmc.ae%2Fstrapi%2FDr_Amro_90f95a38db.png&w=3840&q=75",
       specialty: "Pediatrician",
@@ -115,6 +127,8 @@ export const doctorlist = reactive({
     {
       id: 7,
       name: "Dr. Amina Khelifa",
+      email: "amina.khelifa@example.com",
+      password: "passwordAmina",
       description: "Studied at University of Sousse and completed residency at Sahloul University Hospital",
       image: "https://media.istockphoto.com/id/1372002650/photo/cropped-portrait-of-an-attractive-young-female-doctor-standing-with-her-arms-folded-in-the.jpg?s=612x612&w=0&k=20&c=o1QtStNsowOU0HSof6xQ_jZMglU8ZK565gHd655U6S4=",
       specialty: "Dermatologist",
@@ -133,6 +147,8 @@ export const doctorlist = reactive({
     {
       id: 8,
       name: "Dr. Sami Ben Ali",
+      email: "sami.benali@example.com",
+      password: "passwordSami",
       description: "Studied at University of Tunis and completed residency at Rabta Hospital",
       image: "https://previews.123rf.com/images/dolgachov/dolgachov1307/dolgachov130700228/20605818-bright-picture-of-male-doctor-with-stethoscope.jpg",
       specialty: "Cardiologist",
@@ -151,6 +167,8 @@ export const doctorlist = reactive({
     {
       id: 9,
       name: "Dr. Tarek Ayari",
+      email: "tarek.ayari@example.com",
+      password: "passwordTarek",
       description: "Studied at University of Monastir and completed residency at Farhat Hached University Hospital",
       image: "https://st4.depositphotos.com/1017986/21088/i/450/depositphotos_210888716-stock-photo-happy-doctor-with-clipboard-at.jpg",
       specialty: "Psychiatrist",
@@ -169,6 +187,8 @@ export const doctorlist = reactive({
     {
       id: 10,
       name: "Dr. Manel Ben Ahmed",
+      email: "manel.benahmed@example.com",
+      password: "passwordManel",
       description: "Studied at University of Monastir and completed residency at Farhat Hached University Hospital",
       image: "https://plus.unsplash.com/premium_photo-1664475450083-5c9eef17a191?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8ZmVtYWxlJTIwZG9jdG9yfGVufDB8fDB8fHww",
       specialty: "Dermatologist",
@@ -187,6 +207,8 @@ export const doctorlist = reactive({
     {
       id: 11,
       name: "Dr. Sarah Aloui",
+      email: "sarah.aloui@example.com",
+      password: "passwordSarahAloui",
       description: "Studied at University of Monastir and completed residency at Farhat Hached University Hospital",
       image: "https://i.pinimg.com/736x/b9/97/a5/b997a530822d0f2c03259070d4590d45.jpg",
       specialty: "Gastroenterologist",
@@ -205,6 +227,8 @@ export const doctorlist = reactive({
     {
       id: 12,
       name: "Dr. Khaled Cherif",
+      email: "khaled.cherif@example.com",
+      password: "passwordKhaled",
       description: "Studied at University of Sfax and completed residency at Sfax University Hospital",
       image: "https://cdn.prod.website-files.com/62d4f06f9c1357a606c3b7ef/65ddf3cdf19abaf5688af2f8_shutterstock_1933145801%20(1).jpg",
       specialty: "Neurologist",
@@ -223,6 +247,8 @@ export const doctorlist = reactive({
     {
       id: 13,
       name: "Dr. Yassir Zribi",
+      email: "yassir.zribi@example.com",
+      password: "passwordYassir",
       description: "Studied at University of Monastir and completed residency at Farhat Hached University Hospital",
       image: "https://s3-eu-west-1.amazonaws.com/interviewquestionsanswers.org/wp-content/uploads/2021/11/doctor-questions.jpg",
       specialty: "Pediatrician",

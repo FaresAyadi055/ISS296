@@ -46,6 +46,8 @@
   
   <script>
   import { ref } from 'vue';
+  import { useRouter } from 'vue-router'; // Import useRouter
+  import { doctorlist } from '../repos/doctors.js'; // Import doctor data
   
   export default {
     setup() {
@@ -60,9 +62,18 @@
       const isOnMedications = ref(false);
       const hasAllergies = ref(false);
       const photo = ref(null);
+      const router = useRouter(); // Initialize router
   
       const handleLogin = () => {
-        console.log('Logging in with:', email.value, password.value);
+        const foundDoctor = doctorlist.doctors.find(doctor => 
+          doctor.email === email.value && doctor.password === password.value
+        );
+        if (foundDoctor) {
+          console.log('Doctor logged in:', foundDoctor);
+          router.push('/HomeDoctor'); // Redirect to HomeDoctor page
+        } else {
+          alert('Login failed: Invalid email or password.');
+        }
       };
   
       const handleRegister = () => {

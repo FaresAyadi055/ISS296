@@ -1,0 +1,174 @@
+export default {
+    patients: [
+        {
+            id: 1,
+            firstName: "Amira",
+            lastName: "Ben Ali",
+            address: "Tunis, Tunisia",
+            phone: "+216 22 123 456",
+            email: "amira.benali@example.com",
+            password: "password123",
+            dob: "1990-05-15",
+            gender: "Female",
+            healthConditions: {
+                chronic: "Asthma",
+                medications: "Albuterol",
+                allergies: "Pollen"
+            },
+            photo: "http://example.com/photos/amira.jpg"
+        },
+        {
+            id: 2,
+            firstName: "Mohamed",
+            lastName: "Zarrouk",
+            address: "Sfax, Tunisia",
+            phone: "+216 23 654 321",
+            email: "mohamed.zarrouk@example.com",
+            password: "password456",
+            dob: "1985-08-20",
+            gender: "Male",
+            healthConditions: {
+                chronic: "Hypertension",
+                medications: "Amlodipine",
+                allergies: "None"
+            },
+            photo: "http://example.com/photos/mohamed.jpg"
+        },
+        {
+            id: 3,
+            firstName: "Leila",
+            lastName: "Jaziri",
+            address: "Ariana, Tunisia",
+            phone: "+216 21 987 654",
+            email: "leila.jaziri@example.com",
+            password: "password789",
+            dob: "1992-03-25",
+            gender: "Female",
+            healthConditions: {
+                chronic: "None",
+                medications: "None",
+                allergies: "Peanuts"
+            },
+            photo: "http://example.com/photos/leila.jpg"
+        },
+        {
+            id: 4,
+            firstName: "Sami",
+            lastName: "Mouhoubi",
+            address: "Tunis, Tunisia",
+            phone: "+216 22 345 678",
+            email: "sami.mouhoubi@example.com",
+            password: "password101",
+            dob: "1994-11-10",
+            gender: "Male",
+            healthConditions: {
+                chronic: "None",
+                medications: "None",
+                allergies: "None"
+            },
+            photo: "http://example.com/photos/sami.jpg"
+        },
+        {
+            id: 5,
+            firstName: "Khaled",
+            lastName: "Hamdi",
+            address: "Sousse, Tunisia",
+            phone: "+216 24 123 456",
+            email: "khaled.hamdi@example.com",
+            password: "password202",
+            dob: "1988-07-30",
+            gender: "Male",
+            healthConditions: {
+                chronic: "Diabetes",
+                medications: "Metformin",
+                allergies: "None"
+            },
+            photo: "http://example.com/photos/khaled.jpg"
+        },
+        {
+            id: 6,
+            firstName: "Nada",
+            lastName: "Bouzid",
+            address: "Sfax, Tunisia",
+            phone: "+216 23 234 567",
+            email: "nada.bouzid@example.com",
+            password: "password303",
+            dob: "1996-01-18",
+            gender: "Female",
+            healthConditions: {
+                chronic: "None",
+                medications: "None",
+                allergies: "None"
+            },
+            photo: "http://example.com/photos/nada.jpg"
+        },
+        {
+            id: 7,
+            firstName: "Imed",
+            lastName: "Cherif",
+            address: "Tunis, Tunisia",
+            phone: "+216 27 987 654",
+            email: "imed.cherif@example.com",
+            password: "password404",
+            dob: "1993-12-02",
+            gender: "Male",
+            healthConditions: {
+                chronic: "None",
+                medications: "None",
+                allergies: "Dust"
+            },
+            photo: "http://example.com/photos/imed.jpg"
+        },
+        {
+            id: 8,
+            firstName: "Rania",
+            lastName: "Ghannem",
+            address: "Bizerte, Tunisia",
+            phone: "+216 29 123 987",
+            email: "rania.ghannem@example.com",
+            password: "password505",
+            dob: "1994-04-11",
+            gender: "Female",
+            healthConditions: {
+                chronic: "None",
+                medications: "None",
+                allergies: "Milk"
+            },
+            photo: "http://example.com/photos/rania.jpg"
+        },
+        {
+            id: 9,
+            firstName: "Mouna",
+            lastName: "Slimani",
+            address: "Tunis, Tunisia",
+            phone: "+216 22 876 543",
+            email: "mouna.slimani@example.com",
+            password: "password606",
+            dob: "1990-02-13",
+            gender: "Female",
+            healthConditions: {
+                chronic: "None",
+                medications: "None",
+                allergies: "None"
+            },
+            photo: "http://example.com/photos/mouna.jpg"
+        },
+        {
+            id: 10,
+            firstName: "Ali",
+            lastName: "Bouraoui",
+            address: "Sousse, Tunisia",
+            phone: "+216 24 567 890",
+            email: "ali.bouraoui@example.com",
+            password: "password707",
+            dob: "1989-09-08",
+            gender: "Male",
+            healthConditions: {
+                chronic: "None",
+                medications: "None",
+                allergies: "Shellfish"
+            },
+            photo: "http://example.com/photos/ali.jpg"
+        }
+    ]
+}; 
