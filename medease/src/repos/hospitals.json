@@ -1,115 +1,184 @@
 {
-    "hospitals": [
-      {
-        "id": 1,
-        "name": "Clinique Pasteur",
-        "city": "Tunis",
-        "address": "Avenue Habib Bourguiba, Tunis",
-        "phone": "+216 71 123 456",
-        "location": {
-          "latitude": 36.8065,
-          "longitude": 10.1815
-        }
-      },
-      {
-        "id": 2,
-        "name": "Hôpital Militaire de Tunis",
-        "city": "Tunis",
-        "address": "Tunis, Tunisia",
-        "phone": "+216 71 987 654",
-        "location": {
-          "latitude": 36.8137,
-          "longitude": 10.1563
-        }
-      },
-      {
-        "id": 3,
-        "name": "Clinique La Soukra",
-        "city": "Ariana",
-        "address": "Ariana, Tunisia",
-        "phone": "+216 71 654 321",
-        "location": {
-          "latitude": 36.8606,
-          "longitude": 10.1669
-        }
-      },
-      {
-        "id": 4,
-        "name": "Hôpital Charles Nicolle",
-        "city": "Tunis",
-        "address": "Tunis, Tunisia",
-        "phone": "+216 71 456 789",
-        "location": {
-          "latitude": 36.8184,
-          "longitude": 10.1788
-        }
-      },
-      {
-        "id": 5,
-        "name": "Hôpital de la Rabta",
-        "city": "Tunis",
-        "address": "Avenue de la République, Tunis",
-        "phone": "+216 71 432 109",
-        "location": {
-          "latitude": 36.8440,
-          "longitude": 10.1665
-        }
-      },
-      {
-        "id": 6,
-        "name": "Clinique El Manar",
-        "city": "Tunis",
-        "address": "Tunis, Tunisia",
-        "phone": "+216 71 234 567",
-        "location": {
-          "latitude": 36.8706,
-          "longitude": 10.1883
-        }
-      },
-      {
-        "id": 7,
-        "name": "Hôpital Razi",
-        "city": "Mourouj",
-        "address": "Mourouj, Tunisia",
-        "phone": "+216 71 666 555",
-        "location": {
-          "latitude": 36.7641,
-          "longitude": 10.2267
-        }
-      },
-      {
-        "id": 8,
-        "name": "Clinique Sfax",
-        "city": "Sfax",
-        "address": "Sfax, Tunisia",
-        "phone": "+216 74 123 987",
-        "location": {
-          "latitude": 34.7401,
-          "longitude": 10.7611
-        }
-      },
-      {
-        "id": 9,
-        "name": "Clinique El Menzah",
-        "city": "Tunis",
-        "address": "El Menzah, Tunis",
-        "phone": "+216 71 245 678",
-        "location": {
-          "latitude": 36.8541,
-          "longitude": 10.1773
-        }
-      },
-      {
-        "id": 10,
-        "name": "Clinique El Menzah 5",
-        "city": "Tunis",
-        "address": "Tunis, Tunisia",
-        "phone": "+216 71 111 222",
-        "location": {
-          "latitude": 36.8665,
-          "longitude": 10.1700
-        }
-      }
-    ]
-  }
-  
+  "hospitals": [
+    {
+      "id": 1,
+      "name": "Eastside Medical Center",
+      "latitude": 36.81012,
+      "longitude": 10.16324,
+      "address": "Eastside Avenue, Tunis",
+      "type": "General",
+      "phone": "+216 123 000 001"
+    },
+    {
+      "id": 2,
+      "name": "Mountainview Hospital",
+      "latitude": 36.80645,
+      "longitude": 10.15879,
+      "address": "Mountainview Road, Tunis",
+      "type": "Private",
+      "phone": "+216 123 000 002"
+    },
+    {
+      "id": 3,
+      "name": "Riverside Clinic",
+      "latitude": 36.80400,
+      "longitude": 10.16255,
+      "address": "Riverside Drive, Tunis",
+      "type": "Specialized",
+      "phone": "+216 123 000 003"
+    },
+    {
+      "id": 4,
+      "name": "Sunnydale Health Center",
+      "latitude": 36.80578,
+      "longitude": 10.15665,
+      "address": "Sunnydale Road, Tunis",
+      "type": "Public",
+      "phone": "+216 123 000 004"
+    },
+    {
+      "id": 5,
+      "name": "Greenfield General Hospital",
+      "latitude": 36.80891,
+      "longitude": 10.16540,
+      "address": "Greenfield Parkway, Tunis",
+      "type": "General",
+      "phone": "+216 123 000 005"
+    },
+    {
+      "id": 6,
+      "name": "Lakeside Medical Institute",
+      "latitude": 36.80722,
+      "longitude": 10.16023,
+      "address": "Lakeside Boulevard, Tunis",
+      "type": "Specialized",
+      "phone": "+216 123 000 006"
+    },
+    {
+      "id": 7,
+      "name": "Cityview Surgical Center",
+      "latitude": 36.80937,
+      "longitude": 10.15978,
+      "address": "Cityview Street, Tunis",
+      "type": "Surgical",
+      "phone": "+216 123 000 007"
+    },
+    {
+      "id": 8,
+      "name": "Sunshine Medical Center",
+      "latitude": 36.80510,
+      "longitude": 10.16625,
+      "address": "Sunshine Avenue, Tunis",
+      "type": "Private",
+      "phone": "+216 123 000 008"
+    },
+    {
+      "id": 9,
+      "name": "Horizon Health Facility",
+      "latitude": 36.81075,
+      "longitude": 10.15760,
+      "address": "Horizon Way, Tunis",
+      "type": "Public",
+      "phone": "+216 123 000 009"
+    },
+    {
+      "id": 10,
+      "name": "Oceanview Medical Hub",
+      "latitude": 36.80344,
+      "longitude": 10.15592,
+      "address": "Oceanview Boulevard, Tunis",
+      "type": "Specialized",
+      "phone": "+216 123 000 010"
+    },
+    {
+      "id": 11,
+      "name": "Bluegrass Clinic",
+      "latitude": 36.80691,
+      "longitude": 10.16412,
+      "address": "Bluegrass Lane, Tunis",
+      "type": "General",
+      "phone": "+216 123 000 011"
+    },
+    {
+      "id": 12,
+      "name": "Stonebridge Medical Center",
+      "latitude": 36.80954,
+      "longitude": 10.16397,
+      "address": "Stonebridge Street, Tunis",
+      "type": "Private",
+      "phone": "+216 123 000 012"
+    },
+    {
+      "id": 13,
+      "name": "Maple Grove Health Center",
+      "latitude": 36.80482,
+      "longitude": 10.16143,
+      "address": "Maple Grove Road, Tunis",
+      "type": "Specialized",
+      "phone": "+216 123 000 013"
+    },
+    {
+      "id": 14,
+      "name": "Cedarwood General Hospital",
+      "latitude": 36.81055,
+      "longitude": 10.16010,
+      "address": "Cedarwood Avenue, Tunis",
+      "type": "General",
+      "phone": "+216 123 000 014"
+    },
+    {
+      "id": 15,
+      "name": "Falcon Heights Clinic",
+      "latitude": 36.81211,
+      "longitude": 10.16278,
+      "address": "Falcon Heights Road, Tunis",
+      "type": "Private",
+      "phone": "+216 123 000 015"
+    },
+    {
+      "id": 16,
+      "name": "Birchwood Health Institute",
+      "latitude": 36.81140,
+      "longitude": 10.15694,
+      "address": "Birchwood Street, Tunis",
+      "type": "Specialized",
+      "phone": "+216 123 000 016"
+    },
+    {
+      "id": 17,
+      "name": "Willowbrook Medical Center",
+      "latitude": 36.80323,
+      "longitude": 10.15965,
+      "address": "Willowbrook Parkway, Tunis",
+      "type": "Public",
+      "phone": "+216 123 000 017"
+    },
+    {
+      "id": 18,
+      "name": "Silverlake Health Hub",
+      "latitude": 36.80818,
+      "longitude": 10.16703,
+      "address": "Silverlake Road, Tunis",
+      "type": "Private",
+      "phone": "+216 123 000 018"
+    },
+    {
+      "id": 19,
+      "name": "Rosewood General Hospital",
+      "latitude": 36.80990,
+      "longitude": 10.16267,
+      "address": "Rosewood Street, Tunis",
+      "type": "General",
+      "phone": "+216 123 000 019"
+    },
+    {
+      "id": 20,
+      "name": "Pinehill Medical Center",
+      "latitude": 36.80378,
+      "longitude": 10.16031,
+      "address": "Pinehill Road, Tunis",
+      "type": "Surgical",
+      "phone": "+216 123 000 020"
+    }
+  ]
+}
