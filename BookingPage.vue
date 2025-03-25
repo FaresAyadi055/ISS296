@@ -119,136 +119,75 @@ const cancellationMessage = ref('');
 // Function to cancel an appointment
 async function cancelAppointment() {
   try {
-    const cleanSelectedTime = selectedTime.value.replace(' (Booked)', '').replace(' (Your booking)', '');
-    console.log('CANCELLATION DEBUG - Selected day:', selectedDay.value);
-    console.log('CANCELLATION DEBUG - Selected time (cleaned):', cleanSelectedTime);
-    console.log('CANCELLATION DEBUG - Doctor ID:', doctorId);
-    console.log('CANCELLATION DEBUG - Current user ID:', currentUserId.value);
+    const cleanTime = selectedTime.value.replace(' (Booked)', '').replace(' (Your booking)', '');
     
-    // Step 1: Fetch ALL appointments for this doctor
-    console.log('CANCELLATION DEBUG - Fetching all appointments...');
-    const allAppointmentsResponse = await api.get(`/appointments/${doctorId}`);
-    console.log('CANCELLATION DEBUG - All appointments response:', allAppointmentsResponse.data);
+    // Construct the cancellation data
+    const cancellationData = {
+      doctorId: doctorId.value,
+      day: selectedDay.value,
+      time: cleanTime,
+      patientId: currentUserId.value
+    };
     
-    if (!Array.isArray(allAppointmentsResponse.data)) {
-      console.error('CANCELLATION DEBUG - Invalid response format, expected array');
+    console.log('Sending cancellation data:', cancellationData);
+    
+    // Send a POST request to the cancellation endpoint
+    const response = await api.post('/appointments/cancel', cancellationData);
+    
+    console.log('Cancellation response:', response.data);
+    
+    // Check if the cancellation was successful
+    if (response.status >= 200 && response.status < 300) {
+      console.log('Cancellation successful!');
+      
+      // Update the UI to reflect the cancellation
+      updateLocalScheduleAfterCancellation(selectedDay.value, cleanTime);
+      
+      // Close the confirmation dialog
+      dialog.value = false;
+      
+      // Show success message
+      cancellationMessage.value = `Your booking for ${cleanTime} has been cancelled.`;
+      cancellationDialog.value = true;
+      
+      // Auto close the success dialog after a delay
+      setTimeout(() => {
+        cancellationDialog.value = false;
+        refreshSchedule(); // Refresh to ensure sync with backend
+      }, 2000);
+    } else {
+      console.error('Unexpected response status:', response.status);
       dialogTitle.value = 'Error';
-      dialogMessage.value = 'Invalid response from server. Please try again.';
-      dialog.value = true;
-      return;
-    }
-    
-    // Step 2: Find the EXACT appointment we want to cancel
-    const appointmentToCancel = allAppointmentsResponse.data.find(app => {
-      const timeMatches = app.time === cleanSelectedTime;
-      const dayMatches = app.day === selectedDay.value;
-      const patientMatches = String(app.patientId) === String(currentUserId.value);
-      
-      console.log(`CANCELLATION DEBUG - Comparing appointment: day=${app.day}, time=${app.time}, patient=${app.patientId}`);
-      console.log(`CANCELLATION DEBUG - Matches: day=${dayMatches}, time=${timeMatches}, patient=${patientMatches}`);
-      
-      return timeMatches && dayMatches && patientMatches;
-    });
-    
-    console.log('CANCELLATION DEBUG - Found appointment to cancel:', appointmentToCancel);
-    
-    if (!appointmentToCancel) {
-      console.error('CANCELLATION DEBUG - No matching appointment found!');
-      
-      // Show all appointments that somewhat match for debugging
-      console.log('CANCELLATION DEBUG - Partial matches:');
-      allAppointmentsResponse.data.forEach(app => {
-        if (app.day === selectedDay.value || app.time === cleanSelectedTime) {
-          console.log(`Partial match: day=${app.day}, time=${app.time}, patient=${app.patientId}`);
-        }
-      });
-      
-      dialogTitle.value = 'Error';
-      dialogMessage.value = 'Could not find your appointment in the system.';
-      dialog.value = true;
-      return;
-    }
-    
-    if (!appointmentToCancel.id) {
-      console.error('CANCELLATION DEBUG - Appointment has no ID!');
-      dialogTitle.value = 'Error';
-      dialogMessage.value = 'Appointment has no ID. Cannot proceed with cancellation.';
-      dialog.value = true;
-      return;
-    }
-    
-    // Step 3: Delete the appointment with the exact ID
-    console.log(`CANCELLATION DEBUG - Deleting appointment with ID: ${appointmentToCancel.id}`);
-    try {
-      const deleteResponse = await api.delete(`/appointments/${appointmentToCancel.id}`);
-      console.log('CANCELLATION DEBUG - Delete response:', deleteResponse);
-      
-      if (deleteResponse.status >= 200 && deleteResponse.status < 300) {
-        console.log('CANCELLATION DEBUG - Delete successful!');
-        
-        // Update UI
-        dialog.value = false;
-        updateUIAfterCancellation(appointmentToCancel);
-        
-        // Show cancellation dialog
-        cancellationMessage.value = `Your booking for ${cleanSelectedTime} has been cancelled.`;
-        cancellationDialog.value = true;
-        
-        // Close cancellation dialog and refresh after delay
-        setTimeout(() => {
-          cancellationDialog.value = false;
-          refreshSchedule();
-        }, 2000);
-      } else {
-        console.error('CANCELLATION DEBUG - Delete request failed with status:', deleteResponse.status);
-        dialogTitle.value = 'Error';
-        dialogMessage.value = `Server returned status ${deleteResponse.status}. Please try again.`;
-        dialog.value = true;
-      }
-    } catch (deleteError) {
-      console.error('CANCELLATION DEBUG - Delete request failed with error:', deleteError);
-      console.error('CANCELLATION DEBUG - Error response:', deleteError.response?.data);
-      
-      dialogTitle.value = 'Error';
-      dialogMessage.value = `Delete request failed: ${deleteError.response?.data?.message || deleteError.message}`;
+      dialogMessage.value = 'Server returned an unexpected response. Please try again.';
       dialog.value = true;
     }
   } catch (error) {
-    console.error('CANCELLATION DEBUG - Overall error:', error);
+    console.error('Error during cancellation:', error);
     dialogTitle.value = 'Error';
-    dialogMessage.value = `An error occurred: ${error.message}`;
+    dialogMessage.value = 'Could not cancel your appointment. Please try again.';
     dialog.value = true;
   }
-  
-  // Helper function to update UI after cancellation
-  function updateUIAfterCancellation(appointment) {
-    console.log('CANCELLATION DEBUG - Updating UI for cancelled appointment:', appointment);
-    
-    const doctor = doctorlist.doctors.find(d => d.id === doctorId);
-    if (doctor) {
-      const daySchedule = schedule.value[appointment.day];
-      if (daySchedule) {
-        // Find the slot with this time that's marked as booked
-        const timeIndex = daySchedule.findIndex(time => {
-          const slotClean = time.replace(' (Booked)', '').replace(' (Your booking)', '');
-          return slotClean === appointment.time;
-        });
+}
+
+// Helper function to update the local UI after cancellation
+function updateLocalScheduleAfterCancellation(day, time) {
+  const doctor = doctorlist.doctors.find(d => d.id === doctorId.value);
+  if (doctor) {
+    const daySchedule = schedule.value[day];
+    if (daySchedule) {
+      const timeIndex = daySchedule.findIndex(t => 
+        t.replace(' (Booked)', '').replace(' (Your booking)', '') === time
+      );
+      
+      if (timeIndex !== -1) {
+        schedule.value[day][timeIndex] = time;
+        doctor.schedule[day][timeIndex] = time;
         
-        console.log(`CANCELLATION DEBUG - Found time index: ${timeIndex}`);
+        userBookings.value = userBookings.value.filter(b => 
+          !(b.day === day && b.time === time)
+        );
         
-        if (timeIndex !== -1) {
-          // Reset to original time format
-          schedule.value[appointment.day][timeIndex] = appointment.time;
-          doctor.schedule[appointment.day][timeIndex] = appointment.time;
-          
-          // Remove from userBookings
-          userBookings.value = userBookings.value.filter(b => 
-            !(b.day === appointment.day && b.time === appointment.time)
-          );
-          
-          // Force reactive update
-          schedule.value = {...schedule.value};
-        }
+        schedule.value = {...schedule.value};
       }
     }
   }
@@ -264,7 +203,7 @@ async function refreshSchedule() {
     userBookings.value = [];
     
     // Reset the doctor's schedule in doctorlist
-    const doctor = doctorlist.doctors.find(d => d.id === doctorId);
+    const doctor = doctorlist.doctors.find(d => d.id === doctorId.value);
     if (doctor) {
       // We'll completely reload from the backend
       
@@ -329,4 +268,104 @@ async function refreshSchedule() {
 
 <v-btn @click="refreshSchedule" color="primary" class="mt-4">
   <v-icon>mdi-refresh</v-icon> Refresh Schedule
-</v-btn> 
+</v-btn>
+
+// Add a new debug function that can help identify the backend requirements
+async function debugBackendAPI() {
+  try {
+    console.log('----- BACKEND API DEBUG -----');
+    
+    // 1. Get all appointments
+    const allApptsResponse = await api.get('/appointments');
+    console.log('All appointments in system:', allApptsResponse.data);
+    
+    // 2. Get appointments for this doctor
+    const doctorApptsResponse = await api.get(`/appointments/${doctorId.value}`);
+    console.log(`Appointments for doctor ${doctorId.value}:`, doctorApptsResponse.data);
+    
+    // 3. Try to get API documentation or discovery
+    try {
+      const apiDocsResponse = await api.get('/');
+      console.log('API root response:', apiDocsResponse.data);
+    } catch (e) {
+      console.log('No API documentation endpoint found');
+    }
+    
+    // 4. Test a basic operation to see the response format
+    const testAppointment = {
+      doctorId: doctorId.value,
+      day: 'TestDay',
+      time: 'TestTime',
+      patientId: currentUserId.value
+    };
+    
+    try {
+      const testResponse = await api.post('/appointments', testAppointment);
+      console.log('Test appointment creation response:', testResponse.data);
+      
+      // If successful, try to delete it to see the deletion format
+      if (testResponse.data && testResponse.data.id) {
+        console.log('Got test appointment ID:', testResponse.data.id);
+        
+        const testDeleteResponse = await api.delete(`/appointments/${testResponse.data.id}`);
+        console.log('Test delete response:', testDeleteResponse);
+      }
+    } catch (e) {
+      console.log('Test appointment failed, error:', e.response?.data || e.message);
+    }
+    
+    console.log('----- END BACKEND API DEBUG -----');
+  } catch (error) {
+    console.error('Backend API debug error:', error);
+  }
+}
+
+// Uncomment this to run the debug on page load
+// onMounted(() => {
+//   setTimeout(debugBackendAPI, 2000);
+// }); 
+
+// Emergency mock cancellation that just updates UI and forces refresh
+function mockCancelAppointment() {
+  try {
+    const cleanTime = selectedTime.value.replace(' (Booked)', '').replace(' (Your booking)', '');
+    
+    // Update local UI
+    const doctor = doctorlist.doctors.find(d => d.id === doctorId.value);
+    if (doctor) {
+      const daySchedule = schedule.value[selectedDay.value];
+      if (daySchedule) {
+        const timeIndex = daySchedule.findIndex(time => 
+          time.replace(' (Booked)', '').replace(' (Your booking)', '') === cleanTime
+        );
+        
+        if (timeIndex !== -1) {
+          // Update schedules
+          schedule.value[selectedDay.value][timeIndex] = cleanTime;
+          doctor.schedule[selectedDay.value][timeIndex] = cleanTime;
+          
+          // Remove from userBookings
+          userBookings.value = userBookings.value.filter(b => 
+            !(b.day === selectedDay.value && b.time === cleanTime)
+          );
+        }
+      }
+    }
+    
+    // Show success message
+    dialog.value = false;
+    cancellationMessage.value = `Your booking for ${cleanTime} has been cancelled.`;
+    cancellationDialog.value = true;
+    
+    // Force page reload after message is shown
+    setTimeout(() => {
+      window.location.reload();
+    }, 2000);
+  } catch (error) {
+    console.error('Mock cancellation error:', error);
+    window.location.reload(); // Reload anyway
+  }
+} 
+
+<v-btn v-if="isBooked(selectedDay, selectedTime) && isUserBooking(selectedDay, selectedTime)" @click="cancelAppointment" color="orange" class="custom-btn">Yes, Cancel Booking</v-btn> 
+<v-btn v-if="isBooked(selectedDay, selectedTime) && isUserBooking(selectedDay, selectedTime)" @click="mockCancelAppointment" color="orange" class="custom-btn">Yes, Cancel Booking</v-btn> 

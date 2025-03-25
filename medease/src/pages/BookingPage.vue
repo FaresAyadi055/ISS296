@@ -319,6 +319,9 @@ async function bookTime() {
             time: selectedTime.value, 
             id: response.data.id || Date.now() // Use the API response ID or generate a temporary one
           });
+
+          refreshSchedule(); // Refresh after booking
+          window.location.reload();
         } catch (error) {
           // Check if this is an "already booked" error
           if (error.response?.data?.message === 'This time slot is already booked') {
@@ -379,77 +382,83 @@ function isBooked(day, time) {
 // Function to cancel an appointment
 async function cancelAppointment() {
   try {
-    // Find the booking
-    const booking = userBookings.value.find(b => 
-      b.day === selectedDay.value && 
-      b.time === selectedTime.value
-    );
+    const cleanTime = selectedTime.value.replace(' (Booked)', '').replace(' (Your booking)', '');
     
-    if (!booking) {
-      console.error('Booking not found in user bookings');
+    // Fetch all appointments for the doctor
+    const response = await api.get(`/appointments/${doctorId}`);
+    const appointments = response.data;
+    
+    console.log('Fetched appointments:', appointments);
+    
+    // Find the specific appointment to cancel
+    const appointmentToCancel = appointments.find(appt => {
+      const dayMatches = appt.day === selectedDay.value;
+      const timeMatches = appt.time === cleanTime;
+      const patientMatches = String(appt.patientId) === String(currentUserId.value);
+      
+      console.log(`Checking appointment: day=${dayMatches}, time=${timeMatches}, patient=${patientMatches}`);
+      
+      return dayMatches && timeMatches && patientMatches;
+    });
+    
+    console.log('Appointment to cancel:', appointmentToCancel);
+    
+    if (!appointmentToCancel || !appointmentToCancel._id) {
+      console.error('Could not find appointment to cancel');
       dialogTitle.value = 'Error';
-      dialogMessage.value = 'Cannot find this booking in your records.';
+      dialogMessage.value = 'Could not find your appointment in the system.';
+      dialog.value = true;
       return;
     }
     
-    // Try the API call if we have an ID
-    if (booking.id && !isNaN(booking.id)) {
-      try {
-        await api.delete(`/appointments/${booking.id}`);
-        console.log('Successfully deleted appointment on server');
-      } catch (error) {
-        console.error('API Error:', error);
-        console.log('Continuing with UI update despite API error');
-        // We'll continue and update the UI anyway
-      }
-    }
+    // Delete the appointment using its ID
+    await api.delete(`/appointments/${appointmentToCancel._id}`);
     
-    // Always update the UI, regardless of API success
-    updateUIAfterCancellation();
+    // Update the UI to reflect the cancellation
+    updateLocalScheduleAfterCancellation(selectedDay.value, cleanTime);
+    
+    // Close the confirmation dialog
+    dialog.value = false;
+    
+    // Show success message
+    dialogTitle.value = 'Booking Cancelled';
+    dialogMessage.value = `Your booking for ${cleanTime} has been cancelled.`;
+    window.location.reload();
+    
+    // Auto close the success dialog after a delay
+    setTimeout(() => {
+      dialog.value = false;
+      refreshSchedule(); // Refresh to ensure sync with backend
+    }, 2000);
+
+    refreshSchedule(); // Refresh after cancellation
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error cancelling appointment:', error);
     dialogTitle.value = 'Error';
-    dialogMessage.value = 'There was a problem cancelling your booking.';
+    dialogMessage.value = 'Could not cancel your appointment. Please try again.';
+    dialog.value = true;
   }
-  
-  // Helper function to update UI after cancellation
-  function updateUIAfterCancellation() {
-    // Find the doctor and update their schedule
-    const doctor = doctorlist.doctors.find(d => d.id === doctorId);
-    if (doctor) {
-      const daySchedule = schedule.value[selectedDay.value];
-      if (daySchedule) {
-        const timeIndex = daySchedule.findIndex(time => 
-          time.startsWith(selectedTime.value) && time.includes('(Booked)')
+}
+
+// Helper function to update the local UI after cancellation
+function updateLocalScheduleAfterCancellation(day, time) {
+  const doctor = doctorlist.doctors.find(d => d.id === doctorId.value);
+  if (doctor) {
+    const daySchedule = schedule.value[day];
+    if (daySchedule) {
+      const timeIndex = daySchedule.findIndex(t => 
+        t.replace(' (Booked)', '').replace(' (Your booking)', '') === time
+      );
+      
+      if (timeIndex !== -1) {
+        schedule.value[day][timeIndex] = time;
+        doctor.schedule[day][timeIndex] = time;
+        
+        userBookings.value = userBookings.value.filter(b => 
+          !(b.day === day && b.time === time)
         );
         
-        if (timeIndex !== -1) {
-          // Make sure to set it back to the original time format without any labels
-          const originalTime = selectedTime.value;
-          
-          // Update local schedule
-          schedule.value[selectedDay.value][timeIndex] = originalTime;
-          // Update doctorlist schedule
-          doctor.schedule[selectedDay.value][timeIndex] = originalTime;
-          
-          // Make sure it's completely removed from userBookings
-          userBookings.value = userBookings.value.filter(b => 
-            !(b.day === selectedDay.value && 
-              (b.time === selectedTime.value || b.time === originalTime))
-          );
-          
-          // Force a refresh of the schedule display
-          schedule.value = {...schedule.value};
-          
-          // Show success message with dialog
-          dialogTitle.value = 'Booking Cancelled';
-          dialogMessage.value = `Your booking for ${selectedTime.value} has been cancelled.`;
-          
-          // Close dialog after a delay
-          setTimeout(() => {
-            dialog.value = false;
-          }, 2000);
-        }
+        schedule.value = {...schedule.value};
       }
     }
   }
@@ -515,43 +524,31 @@ function mockCancelAppointment() {
   }
 }
 
-/*async function refreshSchedule() {
-  // Clear current data
-  schedule.value = {};
-  userBookings.value = [];
-  
-  // Refetch everything from scratch
-  await fetchSchedule();
-  
-  // Show confirmation in dialog
-  dialogTitle.value = 'Schedule Refreshed';
-  dialogMessage.value = 'Your appointment schedule has been refreshed.';
-  dialog.value = true;
-  
-  // Close dialog after a delay
-  setTimeout(() => {
-    dialog.value = false;
-  }, 2000);
-}*/
-
-// Add this function to your component
-async function forceSync() {
-  // Clear local state
-  schedule.value = {};
-  userBookings.value = [];
-  
-  // Fetch fresh data from backend
-  await fetchSchedule();
-  
-  // Inform user
-  dialogTitle.value = 'Schedule Synchronized';
-  dialogMessage.value = 'Your schedule has been synchronized with the server.';
-  dialog.value = true;
-  
-  // Close after delay
-  setTimeout(() => {
-    dialog.value = false;
-  }, 2000);
+// Function to refresh the schedule
+async function refreshSchedule() {
+  try {
+    // Fetch the updated schedule from the backend
+    const response = await api.get(`/appointments/${doctorId}`);
+    const updatedAppointments = response.data;
+    
+    // Update the local schedule with the new data
+    updatedAppointments.forEach(appointment => {
+      const daySchedule = schedule.value[appointment.day];
+      if (daySchedule) {
+        const timeIndex = daySchedule.findIndex(time => 
+          time.replace(' (Booked)', '').replace(' (Your booking)', '') === appointment.time
+        );
+        
+        if (timeIndex !== -1) {
+          schedule.value[appointment.day][timeIndex] = `${appointment.time} (Booked)`;
+        }
+      }
+    });
+    
+    console.log('Schedule refreshed successfully');
+  } catch (error) {
+    console.error('Error refreshing schedule:', error);
+  }
 }
 
 onMounted(fetchSchedule);
