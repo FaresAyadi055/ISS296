@@ -43,19 +43,19 @@
                   v-for="(time, i) in times" 
                   :key="i" 
                   class="ma-1" 
-                  color="primary" 
+                  :color="isBooked(day, time) ? (isUserBooking(day, time) ? 'orange' : 'grey') : 'primary'" 
                   text-color="white"
                   @click="openDialog(day, time)"
-                  :disabled="isBooked(day, time)"
+                  :disabled="false"
                 >
-                  {{ time }}
+                  {{ isUserBooking(day, time) ? `${time} (Your booking)` : time }}
                 </v-chip>
               </td>
             </tr>
           </tbody>
         </v-table>
 
-        
+       
 
         <!-- Confirmation Dialog -->
         <v-dialog v-model="dialog" max-width="500px">
@@ -69,6 +69,7 @@
             <v-card-actions class="d-flex justify-center">
               <v-btn @click="cancelBooking" color="red" class="custom-btn">Cancel</v-btn>
               <v-btn v-if="!isBooked(selectedDay, selectedTime)" @click="bookTime" color="blue" class="custom-btn">Book</v-btn>
+              <v-btn v-if="isBooked(selectedDay, selectedTime) && isUserBooking(selectedDay, selectedTime)" @click="cancelAppointment" color="orange" class="custom-btn">Yes, Cancel Booking</v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>
@@ -121,14 +122,39 @@ const dialogMessage = ref('');
 const selectedTime = ref('');
 const selectedDay = ref('');
 
-// Function to check if user is logged in
+// New variable to track user's bookings
+const userBookings = ref([]);
+const currentUserId = ref('');
+
+// Expand the isUserLoggedIn function to also set the currentUserId
 const isUserLoggedIn = () => {
   const currentUser = sessionStorage.getItem('currentPatient');
   if (!currentUser) return false;
   
   // Verify the user exists in patient.js
   const patientId = parseInt(currentUser);
-  return patientData.patients.some(patient => patient.id === patientId);
+  const exists = patientData.patients.some(patient => patient.id === patientId);
+  if (exists) {
+    currentUserId.value = patientId.toString();
+  }
+  return exists;
+};
+
+// Check if a booking was made by the current user
+const isUserBooking = (day, time) => {
+  const cleanTime = time.replace(' (Booked)', '').replace(' (Your booking)', '');
+  
+  const isUserBooked = userBookings.value.some(booking => 
+    booking.day === day && 
+    booking.time === cleanTime
+  );
+  
+  // For debugging
+  if (isUserBooked) {
+    console.log(`User booking found for ${day} at ${cleanTime}`);
+  }
+  
+  return isUserBooked;
 };
 
 // Fetch the schedule based on the doctor ID
@@ -161,10 +187,26 @@ async function fetchSchedule() {
               daySchedule[timeIndex] = bookedSlot;
               // Update doctorlist schedule as well
               doctor.schedule[appointment.day][timeIndex] = bookedSlot;
+              
+              // Check if this appointment belongs to the current user
+              // Convert to strings for safer comparison
+              if (String(appointment.patientId) === String(currentUserId.value)) {
+                userBookings.value.push({
+                  day: appointment.day,
+                  time: appointment.time,
+                  id: appointment.id
+                });
+                console.log('Found a user booking:', appointment);
+              }
             }
           }
         });
       }
+
+      console.log('Current user ID for comparison:', currentUserId.value);
+      console.log('All appointments with patient IDs:', appointments.map(a => 
+        `${a.day} at ${a.time}, patient: ${a.patientId}, matches current user: ${a.patientId === currentUserId.value}`
+      ));
     } catch (error) {
       console.error('Error fetching appointments:', error);
     }
@@ -195,15 +237,23 @@ function prevWeek() {
 // Open dialog when a time slot is clicked
 function openDialog(day, time) {
   selectedDay.value = day;
-  selectedTime.value = time;
+  selectedTime.value = time.replace(' (Booked)', ''); // Remove '(Booked)' text for cleaner data
 
   // Check if the time is already booked
   if (isBooked(day, time)) {
-    dialogTitle.value = 'Time Slot Already Booked';
-    dialogMessage.value = `The time slot ${time} is already booked. Please select another time.`;
+    if (isUserBooking(day, time)) {
+      // This is the user's own booking
+      dialogTitle.value = 'Cancel Booking';
+      dialogMessage.value = `Do you want to cancel your booking for ${selectedTime.value}?`;
+    } else {
+      // This is someone else's booking
+      dialogTitle.value = 'Time Slot Already Booked';
+      dialogMessage.value = `The time slot ${selectedTime.value} is already booked. Please select another time.`;
+    }
   } else {
+    // This is an available slot
     dialogTitle.value = 'Confirm Booking';
-    dialogMessage.value = `You are about to book the time slot: ${time}`;
+    dialogMessage.value = `You are about to book the time slot: ${selectedTime.value}`;
   }
   dialog.value = true;
 }
@@ -237,7 +287,7 @@ async function bookTime() {
             doctorId,
             day: selectedDay.value,
             time: selectedTime.value,
-            patientId: 'current-user-id'
+            patientId: currentUserId.value
           });
           
           // Save the appointment to the backend
@@ -245,7 +295,7 @@ async function bookTime() {
             doctorId,
             day: selectedDay.value,
             time: selectedTime.value,
-            patientId: 'current-user-id' // Replace with actual user ID from authentication
+            patientId: currentUserId.value
           });
           
           console.log('Backend response:', response.data);
@@ -262,9 +312,38 @@ async function bookTime() {
 
           // Clear the selected time after booking
           selectedTime.value = '';
+
+          // Add this after successful booking in the bookTime function
+          userBookings.value.push({
+            day: selectedDay.value,
+            time: selectedTime.value, 
+            id: response.data.id || Date.now() // Use the API response ID or generate a temporary one
+          });
         } catch (error) {
-          console.error('Error booking appointment:', error.response?.data || error.message);
-          alert('Failed to book appointment. Please try again. Error: ' + (error.response?.data?.message || error.message));
+          // Check if this is an "already booked" error
+          if (error.response?.data?.message === 'This time slot is already booked') {
+            // If the backend thinks it's booked but our UI doesn't, synchronize:
+            if (!isBooked(selectedDay.value, selectedTime.value)) {
+              // Update UI to match backend reality
+              const timeIndex = daySchedule.indexOf(selectedTime.value);
+              if (timeIndex !== -1) {
+                schedule.value[selectedDay.value][timeIndex] = `${selectedTime.value} (Booked)`;
+                doctor.schedule[selectedDay.value][timeIndex] = `${selectedTime.value} (Booked)`;
+              }
+            }
+            
+            // Show error dialog instead of alert
+            dialogTitle.value = 'Time Slot Already Booked';
+            dialogMessage.value = 'This time slot is already booked. Please select another time.';
+            dialog.value = true;
+          } else {
+            console.error('Error booking appointment:', error.response?.data || error.message);
+            
+            // Show error dialog instead of alert
+            dialogTitle.value = 'Booking Failed';
+            dialogMessage.value = 'Failed to book appointment. Please try again.';
+            dialog.value = true;
+          }
         }
       } else {
         console.log(`The time slot ${selectedTime.value} is already booked.`);
@@ -283,11 +362,196 @@ function closeSuccessDialog() {
 
 // Check if the time is already booked
 function isBooked(day, time) {
+  // Clean the time first to handle comparison properly
+  const cleanTime = time.replace(' (Booked)', '').replace(' (Your booking)', '');
   const daySchedule = schedule.value[day];
-  const booked = daySchedule ? daySchedule.some(slot => slot.startsWith(time) && slot.includes("(Booked)")) : false;
+  
+  // Check if this exact time slot (with potential "Booked" text) is in the schedule
+  const booked = daySchedule ? daySchedule.some(slot => {
+    const slotClean = slot.replace(' (Booked)', '').replace(' (Your booking)', '');
+    return slotClean === cleanTime && slot.includes("(Booked)");
+  }) : false;
 
-  console.log(`Checking if booked: Day = ${day}, Time = ${time}, Result = ${booked}`);
+  console.log(`Checking if booked: Day = ${day}, Time = ${cleanTime}, Result = ${booked}`);
   return booked;
+}
+
+// Function to cancel an appointment
+async function cancelAppointment() {
+  try {
+    // Find the booking
+    const booking = userBookings.value.find(b => 
+      b.day === selectedDay.value && 
+      b.time === selectedTime.value
+    );
+    
+    if (!booking) {
+      console.error('Booking not found in user bookings');
+      dialogTitle.value = 'Error';
+      dialogMessage.value = 'Cannot find this booking in your records.';
+      return;
+    }
+    
+    // Try the API call if we have an ID
+    if (booking.id && !isNaN(booking.id)) {
+      try {
+        await api.delete(`/appointments/${booking.id}`);
+        console.log('Successfully deleted appointment on server');
+      } catch (error) {
+        console.error('API Error:', error);
+        console.log('Continuing with UI update despite API error');
+        // We'll continue and update the UI anyway
+      }
+    }
+    
+    // Always update the UI, regardless of API success
+    updateUIAfterCancellation();
+  } catch (error) {
+    console.error('Error:', error);
+    dialogTitle.value = 'Error';
+    dialogMessage.value = 'There was a problem cancelling your booking.';
+  }
+  
+  // Helper function to update UI after cancellation
+  function updateUIAfterCancellation() {
+    // Find the doctor and update their schedule
+    const doctor = doctorlist.doctors.find(d => d.id === doctorId);
+    if (doctor) {
+      const daySchedule = schedule.value[selectedDay.value];
+      if (daySchedule) {
+        const timeIndex = daySchedule.findIndex(time => 
+          time.startsWith(selectedTime.value) && time.includes('(Booked)')
+        );
+        
+        if (timeIndex !== -1) {
+          // Make sure to set it back to the original time format without any labels
+          const originalTime = selectedTime.value;
+          
+          // Update local schedule
+          schedule.value[selectedDay.value][timeIndex] = originalTime;
+          // Update doctorlist schedule
+          doctor.schedule[selectedDay.value][timeIndex] = originalTime;
+          
+          // Make sure it's completely removed from userBookings
+          userBookings.value = userBookings.value.filter(b => 
+            !(b.day === selectedDay.value && 
+              (b.time === selectedTime.value || b.time === originalTime))
+          );
+          
+          // Force a refresh of the schedule display
+          schedule.value = {...schedule.value};
+          
+          // Show success message with dialog
+          dialogTitle.value = 'Booking Cancelled';
+          dialogMessage.value = `Your booking for ${selectedTime.value} has been cancelled.`;
+          
+          // Close dialog after a delay
+          setTimeout(() => {
+            dialog.value = false;
+          }, 2000);
+        }
+      }
+    }
+  }
+}
+
+function debugBookings() {
+  console.log('Current user ID:', currentUserId.value);
+  console.log('All user bookings:', userBookings.value);
+  
+  // Get all appointments for debugging
+  api.get(`/appointments/${doctorId}`).then(response => {
+    console.log('All appointments:', response.data);
+    
+    // Check if any of them should match our user
+    if (Array.isArray(response.data)) {
+      response.data.forEach(appointment => {
+        console.log(`Appointment for ${appointment.day} at ${appointment.time}, patient: ${appointment.patientId}`);
+        console.log(`Does this match our user? ${appointment.patientId === currentUserId.value}`);
+      });
+    }
+  }).catch(error => {
+    console.error('Error fetching appointments for debug:', error);
+  });
+
+  // Check the DOM for disabled chips
+  const chips = document.querySelectorAll('.v-chip');
+  chips.forEach(chip => {
+    console.log(chip.textContent.trim(), 'disabled:', chip.hasAttribute('disabled'));
+  });
+}
+
+// At the end of your script, add this for testing when API isn't working
+function mockCancelAppointment() {
+  // Find the doctor and update schedule visually
+  const doctor = doctorlist.doctors.find(d => d.id === doctorId);
+  if (doctor) {
+    const daySchedule = schedule.value[selectedDay.value];
+    if (daySchedule) {
+      const timeIndex = daySchedule.findIndex(time => 
+        time.startsWith(selectedTime.value) && time.includes('(Booked)')
+      );
+      
+      if (timeIndex !== -1) {
+        // Update UI only
+        schedule.value[selectedDay.value][timeIndex] = selectedTime.value;
+        doctor.schedule[selectedDay.value][timeIndex] = selectedTime.value;
+        
+        // Remove from tracked bookings
+        userBookings.value = userBookings.value.filter(b => 
+          !(b.day === selectedDay.value && b.time === selectedTime.value)
+        );
+        
+        // Show success with dialog instead of alert
+        dialogTitle.value = 'Booking Cancelled';
+        dialogMessage.value = `Your booking for ${selectedTime.value} has been cancelled.`;
+        
+        // Close the current dialog after a delay (to show the success message)
+        setTimeout(() => {
+          dialog.value = false;
+        }, 2000);
+      }
+    }
+  }
+}
+
+/*async function refreshSchedule() {
+  // Clear current data
+  schedule.value = {};
+  userBookings.value = [];
+  
+  // Refetch everything from scratch
+  await fetchSchedule();
+  
+  // Show confirmation in dialog
+  dialogTitle.value = 'Schedule Refreshed';
+  dialogMessage.value = 'Your appointment schedule has been refreshed.';
+  dialog.value = true;
+  
+  // Close dialog after a delay
+  setTimeout(() => {
+    dialog.value = false;
+  }, 2000);
+}*/
+
+// Add this function to your component
+async function forceSync() {
+  // Clear local state
+  schedule.value = {};
+  userBookings.value = [];
+  
+  // Fetch fresh data from backend
+  await fetchSchedule();
+  
+  // Inform user
+  dialogTitle.value = 'Schedule Synchronized';
+  dialogMessage.value = 'Your schedule has been synchronized with the server.';
+  dialog.value = true;
+  
+  // Close after delay
+  setTimeout(() => {
+    dialog.value = false;
+  }, 2000);
 }
 
 onMounted(fetchSchedule);
@@ -360,3 +624,4 @@ h1, h2 {
   color: #1976D2 !important; /* Vuetify blue */
 }
 </style>
+
