@@ -1,77 +1,79 @@
 <template>
-  <navbar-auth-patient v-if="isUserLoggedIn()" />
-  <navbar v-else />
   <v-app style="background-color: #f8fafc;">
-    <v-container>
-      <v-row>
-        <!-- Sidebar Filters -->
-        <v-col cols="12" md="3">
-          <v-card class="pa-4" style="background-color: white; color: black;">
-            <v-card-title>Filters</v-card-title>
-            <v-divider></v-divider>
+    <navbar-auth-patient v-if="isUserLoggedIn()" app />
+    <navbar v-else app />
+    <v-main>
+      <v-container>
+        <v-row>
+          <!-- Sidebar Filters -->
+          <v-col cols="12" md="3">
+            <v-card class="pa-4" style="background-color: white; color: black;">
+              <v-card-title>Filters</v-card-title>
+              <v-divider></v-divider>
 
-            <div v-for="(subcategories, category) in doctorlist.categories" :key="category">
+              <div v-for="(subcategories, category) in doctorlist.categories" :key="category">
+                <v-checkbox
+                  v-if="category !== 'rating'"
+                  v-model="selectedCategories"
+                  :label="category"
+                  :value="category"
+                  hide-details
+                  dense
+                ></v-checkbox>
+
+                <v-expand-transition>
+                  <div v-if="selectedCategories.includes(category)" class="ml-4">
+                    <v-checkbox
+                      v-for="subcategory in subcategories"
+                      :key="subcategory"
+                      v-model="selectedSubcategories"
+                      :label="subcategory"
+                      :value="subcategory"
+                      hide-details
+                      dense
+                    ></v-checkbox>
+                  </div>
+                </v-expand-transition>
+              </div>
+
+              <!-- Rating Sorting Checkbox -->
               <v-checkbox
-                v-if="category !== 'rating'"
-                v-model="selectedCategories"
-                :label="category"
-                :value="category"
+                v-model="sortByRating"
+                label="Sort by Rating"
                 hide-details
                 dense
               ></v-checkbox>
+            </v-card>
+          </v-col>
 
-              <v-expand-transition>
-                <div v-if="selectedCategories.includes(category)" class="ml-4">
-                  <v-checkbox
-                    v-for="subcategory in subcategories"
-                    :key="subcategory"
-                    v-model="selectedSubcategories"
-                    :label="subcategory"
-                    :value="subcategory"
-                    hide-details
-                    dense
-                  ></v-checkbox>
-                </div>
-              </v-expand-transition>
-            </div>
+          <!-- Doctors List -->
+          <v-col cols="12" md="9">
+            <v-row>
+              <v-col v-for="doctor in filteredDoctors" :key="doctor.id" cols="12" sm="6" md="4">
+                <v-card class="pa-3" style="background-color: white; border-radius: 20px; color: black;">
+                  <v-img :src="doctor.image" height="150px" contain></v-img>
+                  <v-card-title>{{ doctor.name }}</v-card-title>
+                  <v-card-subtitle>{{ doctor.specialty }} - {{ doctor.location }}</v-card-subtitle>
+                  <v-card-text>⭐ {{ doctor.rating.toFixed(1) }}/5.0</v-card-text>
 
-            <!-- Rating Sorting Checkbox -->
-            <v-checkbox
-              v-model="sortByRating"
-              label="Sort by Rating"
-              hide-details
-              dense
-            ></v-checkbox>
-          </v-card>
-        </v-col>
+                  <v-card-actions>
+                    <v-btn style="background-color: #6CACFC; color: white; border-radius: 20px;" @click="toggleExpand(doctor.id)">See more</v-btn>
+                    <v-btn style="background-color: #6CACFC; color: white; border-radius: 20px;" @click="handleBooking(doctor.id)">Book</v-btn>
+                  </v-card-actions>
 
-        <!-- Doctors List -->
-        <v-col cols="12" md="9">
-          <v-row>
-            <v-col v-for="doctor in filteredDoctors" :key="doctor.id" cols="12" sm="6" md="4">
-              <v-card class="pa-3" style="background-color: white; border-radius: 20px; color: black;">
-                <v-img :src="doctor.image" height="150px" contain></v-img>
-                <v-card-title>{{ doctor.name }}</v-card-title>
-                <v-card-subtitle>{{ doctor.specialty }} - {{ doctor.location }}</v-card-subtitle>
-                <v-card-text>⭐ {{ doctor.rating.toFixed(1) }}/5.0</v-card-text>
-
-                <v-card-actions>
-                  <v-btn style="background-color: #6CACFC; color: white; border-radius: 20px;" @click="toggleExpand(doctor.id)">See more</v-btn>
-                  <v-btn style="background-color: #6CACFC; color: white; border-radius: 20px;" @click="handleBooking(doctor.id)">Book</v-btn>
-                </v-card-actions>
-
-                <v-expand-transition>
-                  <v-card-text v-if="expandedIndex === doctor.id">
-                    {{ doctor.description }}
-                  </v-card-text>
-                </v-expand-transition>
-              </v-card>
-            </v-col>
-          </v-row>
-        </v-col>
-      </v-row>
-    </v-container>
-    <Footer />
+                  <v-expand-transition>
+                    <v-card-text v-if="expandedIndex === doctor.id">
+                      {{ doctor.description }}
+                    </v-card-text>
+                  </v-expand-transition>
+                </v-card>
+              </v-col>
+            </v-row>
+          </v-col>
+        </v-row>
+      </v-container>
+      <Footer />
+    </v-main>
   </v-app>
 </template>
 
@@ -80,6 +82,8 @@ import { ref, computed } from 'vue';
 import { doctorlist } from '@/repos/doctors.js';
 import patientData from '@/repos/patient.js';
 import Footer from '@/components/footer.vue';
+import NavbarAuthPatient from '@/components/navbarAuthPatient.vue';
+import Navbar from '@/components/navbar.vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();

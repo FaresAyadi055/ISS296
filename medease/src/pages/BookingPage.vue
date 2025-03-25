@@ -1,90 +1,92 @@
 <template>
-  <v-app style="background-color: white;">
-    <navbar-auth-patient v-if="isUserLoggedIn()" />
-    <navbar v-else />
+  <v-app style="background-color: #f8fafc;">
+    <navbar-auth-patient v-if="isUserLoggedIn()" app />
+    <navbar v-else app />
 
-    <v-container>
-      <v-btn to="/" class="mb-3" color="primary">Back</v-btn>
+    <v-main>
+      <v-container>
+        <v-btn to="/" class="mb-3" color="primary">Back</v-btn>
 
-      <div class="text-center mb-6">
-        <h1 class="text-primary font-weight-bold mb-2">
-          {{ doctorName }}
-        </h1>
-        <h2 class="text-blue-darken-1 text-subtitle-1">
-          {{ doctorSpecialty }} • {{ doctorLocation }}
-        </h2>
-      </div>
+        <div class="text-center mb-6">
+          <h1 class="text-primary font-weight-bold mb-2">
+            {{ doctorName }}
+          </h1>
+          <h2 class="text-blue-darken-1 text-subtitle-1">
+            {{ doctorSpecialty }} • {{ doctorLocation }}
+          </h2>
+        </div>
 
-      <v-row class="my-4">
-        <v-col cols="12" class="d-flex justify-space-between align-center">
-          <v-btn @click="prevWeek" color="primary">Previous Week</v-btn>
-          <h2 class="text-blue-darken-2 font-weight-medium">Week of {{ formattedWeek }}</h2>
-          <v-btn @click="nextWeek" color="primary">Next Week</v-btn>
-        </v-col>
-      </v-row>
+        <v-row class="my-4">
+          <v-col cols="12" class="d-flex justify-space-between align-center">
+            <v-btn @click="prevWeek" color="primary">Previous Week</v-btn>
+            <h2 class="text-blue-darken-2 font-weight-medium">Week of {{ formattedWeek }}</h2>
+            <v-btn @click="nextWeek" color="primary">Next Week</v-btn>
+          </v-col>
+        </v-row>
 
-      <v-table class="custom-table">
-        <thead>
-          <tr>
-            <th class="text-blue-darken-1">Day</th>
-            <th class="text-blue-darken-1">Available Time Slots</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr 
-            v-for="(times, day, index) in schedule" 
-            :key="day"
-            :class="{ 'table-row-alt': index % 2 !== 0 }"
-          >
-            <td class="text-blue-grey-darken-3 font-weight-medium">{{ day }}</td>
-            <td>
-              <v-chip 
-                v-for="(time, i) in times" 
-                :key="i" 
-                class="ma-1" 
-                color="primary" 
-                text-color="white"
-                @click="openDialog(day, time)"
-                :disabled="isBooked(day, time)"
-              >
-                {{ time }}
-              </v-chip>
-            </td>
-          </tr>
-        </tbody>
-      </v-table>
+        <v-table class="custom-table">
+          <thead>
+            <tr>
+              <th class="text-blue-darken-1">Day</th>
+              <th class="text-blue-darken-1">Available Time Slots</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr 
+              v-for="(times, day, index) in schedule" 
+              :key="day"
+              :class="{ 'table-row-alt': index % 2 !== 0 }"
+            >
+              <td class="text-blue-grey-darken-3 font-weight-medium">{{ day }}</td>
+              <td>
+                <v-chip 
+                  v-for="(time, i) in times" 
+                  :key="i" 
+                  class="ma-1" 
+                  color="primary" 
+                  text-color="white"
+                  @click="openDialog(day, time)"
+                  :disabled="isBooked(day, time)"
+                >
+                  {{ time }}
+                </v-chip>
+              </td>
+            </tr>
+          </tbody>
+        </v-table>
 
-      
+        
 
-      <!-- Confirmation Dialog -->
-      <v-dialog v-model="dialog" max-width="500px">
-        <v-card class="custom-dialog-card">
-          <v-card-title class="headline text-center">
-            {{ dialogTitle }}
-          </v-card-title>
-          <v-card-text class="text-center">
-            <p class="font-weight-medium text-blue">{{ dialogMessage }}</p>
-          </v-card-text>
-          <v-card-actions class="d-flex justify-center">
-            <v-btn @click="cancelBooking" color="red" class="custom-btn">Cancel</v-btn>
-            <v-btn v-if="!isBooked(selectedDay, selectedTime)" @click="bookTime" color="blue" class="custom-btn">Book</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+        <!-- Confirmation Dialog -->
+        <v-dialog v-model="dialog" max-width="500px">
+          <v-card class="custom-dialog-card">
+            <v-card-title class="headline text-center">
+              {{ dialogTitle }}
+            </v-card-title>
+            <v-card-text class="text-center">
+              <p class="font-weight-medium text-blue">{{ dialogMessage }}</p>
+            </v-card-text>
+            <v-card-actions class="d-flex justify-center">
+              <v-btn @click="cancelBooking" color="red" class="custom-btn">Cancel</v-btn>
+              <v-btn v-if="!isBooked(selectedDay, selectedTime)" @click="bookTime" color="blue" class="custom-btn">Book</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
 
-      <!-- Success Booking Confirmation Dialog -->
-      <v-dialog v-model="successDialog" max-width="400px">
-        <v-card class="custom-dialog-card">
-          <v-card-title class="headline text-center">Booking Successful!</v-card-title>
-          <v-card-text class="text-center">
-            <p class="font-weight-medium text-blue">Your booking for <strong>{{ selectedTime }}</strong> has been confirmed!</p>
-          </v-card-text>
-          <v-card-actions class="d-flex justify-center">
-            <v-btn @click="closeSuccessDialog" color="blue" class="custom-btn">Okay</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-    </v-container>
+        <!-- Success Booking Confirmation Dialog -->
+        <v-dialog v-model="successDialog" max-width="400px">
+          <v-card class="custom-dialog-card">
+            <v-card-title class="headline text-center">Booking Successful!</v-card-title>
+            <v-card-text class="text-center">
+              <p class="font-weight-medium text-blue">Your booking for <strong>{{ selectedTime }}</strong> has been confirmed!</p>
+            </v-card-text>
+            <v-card-actions class="d-flex justify-center">
+              <v-btn @click="closeSuccessDialog" color="blue" class="custom-btn">Okay</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+      </v-container>
+    </v-main>
   </v-app>
 </template>
 
@@ -94,6 +96,8 @@ import { useRoute } from 'vue-router';
 import { doctorlist } from '@/repos/doctors.js'; // Ensure the correct path is used
 import api from '@/plugins/axios';
 import patientData from '@/repos/patient.js';
+import NavbarAuthPatient from '@/components/navbarAuthPatient.vue';
+import Navbar from '@/components/navbar.vue';
 
 const route = useRoute();
 const doctorId = parseInt(route.params.doctorId, 10); // Get the doctor ID from route params
