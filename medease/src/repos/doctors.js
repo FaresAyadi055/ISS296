@@ -1,9 +1,16 @@
 import { reactive } from 'vue';
 
-export const doctorlist = reactive({
-  currentWeek: new Date().toISOString().split("T")[0], // Store current week globally
+// Load saved schedules from localStorage or use default if none exists
+const loadSavedSchedules = () => {
+  const savedSchedules = localStorage.getItem('doctorSchedules');
+  return savedSchedules ? JSON.parse(savedSchedules) : null;
+};
+
+// Initialize doctors data
+const initializeDoctorList = () => {
+  const savedSchedules = loadSavedSchedules();
   
-  doctors: [
+  const defaultDoctors = [
     {
       id: 1,
       name: "Dr. Kamel Ouertani",
@@ -264,7 +271,38 @@ export const doctorlist = reactive({
         Sunday: []
       }
     }
-  ],
+  ];
+
+  // If there are saved schedules, update the default doctors' schedules
+  if (savedSchedules) {
+    defaultDoctors.forEach(doctor => {
+      if (savedSchedules[doctor.id]) {
+        doctor.schedule = savedSchedules[doctor.id];
+      }
+    });
+  }
+
+  return defaultDoctors;
+};
+
+// Create the reactive doctorlist object
+export const doctorlist = reactive({
+  currentWeek: new Date().toISOString().split("T")[0],
+  doctors: initializeDoctorList(),
+  
+  // Add method to save schedule changes
+  saveScheduleChanges(doctorId, newSchedule) {
+    // Find the doctor and update their schedule
+    const doctor = this.doctors.find(d => d.id === doctorId);
+    if (doctor) {
+      doctor.schedule = newSchedule;
+      
+      // Save all schedules to localStorage
+      const savedSchedules = loadSavedSchedules() || {};
+      savedSchedules[doctorId] = newSchedule;
+      localStorage.setItem('doctorSchedules', JSON.stringify(savedSchedules));
+    }
+  },
   categories: {
     Speciality: [
       "Dermatologist",
