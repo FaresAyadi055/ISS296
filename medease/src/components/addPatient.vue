@@ -133,6 +133,7 @@
   <script>
   import { ref } from 'vue';
   import patientData from '../repos/patient.js'; // Import patient data
+  import { useRouter } from 'vue-router';
   
   export default {
     setup() {
@@ -147,14 +148,24 @@
       const isOnMedications = ref(false);
       const hasAllergies = ref(false);
       const photo = ref(null);
+      const router = useRouter();
   
       const handleLogin = () => {
         const foundPatient = patientData.patients.find(patient => 
           patient.email === email.value && patient.password === password.value
         );
         if (foundPatient) {
-          console.log('Patient logged in:', foundPatient);
-          // Redirect or perform login actions
+          // Store the patient's ID in session storage
+          sessionStorage.setItem('currentPatient', foundPatient.id.toString());
+          
+          // Check if there's a pending booking redirect
+          const redirectPath = sessionStorage.getItem('bookingRedirect');
+          if (redirectPath) {
+            sessionStorage.removeItem('bookingRedirect'); // Clear the redirect
+            router.push(redirectPath);
+          } else {
+            router.push('/HomePatient'); // Default redirect
+          }
         } else {
           alert('Login failed: Invalid email or password.');
         }

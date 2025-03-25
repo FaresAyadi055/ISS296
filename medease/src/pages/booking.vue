@@ -1,5 +1,6 @@
 <template>
-  <navbar />
+  <navbar-auth-patient v-if="isUserLoggedIn()" />
+  <navbar v-else />
   <v-app style="background-color: #f8fafc;">
     <v-container>
       <v-row>
@@ -56,7 +57,7 @@
 
                 <v-card-actions>
                   <v-btn style="background-color: #6CACFC; color: white; border-radius: 20px;" @click="toggleExpand(doctor.id)">See more</v-btn>
-                  <v-btn style="background-color: #6CACFC; color: white; border-radius: 20px;" :to="'/booking/' + doctor.id">Book</v-btn>
+                  <v-btn style="background-color: #6CACFC; color: white; border-radius: 20px;" @click="handleBooking(doctor.id)">Book</v-btn>
                 </v-card-actions>
 
                 <v-expand-transition>
@@ -77,20 +78,49 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { doctorlist } from '@/repos/doctors.js';
+import patientData from '@/repos/patient.js';
 import Footer from '@/components/footer.vue';
+import { useRouter } from 'vue-router';
 
+const router = useRouter();
 const expandedIndex = ref(null);
 const selectedCategories = ref([]);
 const selectedSubcategories = ref([]);
 const sortByRating = ref(false);
 
+// Function to check if user is logged in
+const isUserLoggedIn = () => {
+  const currentUser = sessionStorage.getItem('currentPatient');
+  if (!currentUser) return false;
+  
+  // Verify the user exists in patient.js
+  const patientId = parseInt(currentUser);
+  return patientData.patients.some(patient => patient.id === patientId);
+};
+
+// Function to handle booking button click
+const handleBooking = (doctorId) => {
+  if (isUserLoggedIn()) {
+    router.push(`/booking/${doctorId}`);
+  } else {
+    // Store the intended destination for after login
+    sessionStorage.setItem('bookingRedirect', `/booking/${doctorId}`);
+    router.push('/signIn');
+  }
+};
+
 const filteredDoctors = computed(() => {
-  let filtered = doctorlist.doctors.filter(doctor => {
-    return (
-      (selectedCategories.value.includes("Speciality") ? selectedSubcategories.value.includes(doctor.specialty) : true) &&
-      (selectedCategories.value.includes("Location") ? selectedSubcategories.value.includes(doctor.location) : true)
-    );
-  });
+  let filtered = doctorlist.doctors;
+
+  // Only apply specialty filter if a subcategory is selected
+  if (selectedCategories.value.includes("Speciality") && selectedSubcategories.value.length > 0) {
+    filtered = filtered.filter(doctor => selectedSubcategories.value.includes(doctor.specialty));
+  }
+
+  // Only apply location filter if a subcategory is selected
+  if (selectedCategories.value.includes("Location") && selectedSubcategories.value.length > 0) {
+    filtered = filtered.filter(doctor => selectedSubcategories.value.includes(doctor.location));
+  }
 
   if (sortByRating.value) {
     return filtered.sort((a, b) => b.rating - a.rating);
