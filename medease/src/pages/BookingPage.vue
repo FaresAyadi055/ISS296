@@ -110,11 +110,14 @@ function fetchSchedule() {
   if (doctorId >= 0 && doctorId < doctorlist.doctors.length) {
     const doctor = doctorlist.doctors[doctorId];
     doctorName.value = doctor.name;
-    schedule.value = doctor.schedule;
+    
+    // Create a deep copy to make Vue track changes
+    schedule.value = JSON.parse(JSON.stringify(doctor.schedule));
   } else {
     console.error("Doctor not found for ID:", doctorId);
   }
 }
+
 
 function nextWeek() {
   currentWeek.value.setDate(currentWeek.value.getDate() + 7);
@@ -151,22 +154,20 @@ function cancelBooking() {
 
 // Confirm booking
 function bookTime() {
-  const doctorIndex = doctorId; // Use doctorId directly.
-
+  const doctorIndex = doctorId;
+  
   if (doctorIndex >= 0 && doctorIndex < doctorlist.doctors.length) {
     const doctor = doctorlist.doctors[doctorIndex];
-    const daySchedule = doctor.schedule[selectedDay.value];
+    const daySchedule = schedule.value[selectedDay.value];
 
     if (daySchedule) {
       const timeIndex = daySchedule.indexOf(selectedTime.value);
+      console.log("Before booking:", schedule.value[selectedDay.value]); // Debug log
+
       if (timeIndex !== -1 && !isBooked(selectedDay.value, selectedTime.value)) {
-        // Create a *new* array to avoid in-place modification.  This ensures reactivity.
-        const updatedDaySchedule = [...daySchedule];
-        updatedDaySchedule[timeIndex] = `${selectedTime.value} (Booked)`;
+        schedule.value[selectedDay.value][timeIndex] = `${selectedTime.value} (Booked)`;
 
-        // Update the schedule *reactively* by assigning a new array.
-        doctor.schedule[selectedDay.value] = updatedDaySchedule;
-
+        console.log("After booking:", schedule.value[selectedDay.value]); // Debug log
 
         // Close the confirmation dialog and show success dialog
         dialog.value = false;
@@ -175,12 +176,14 @@ function bookTime() {
         // Clear the selected time after booking
         selectedTime.value = '';
       } else {
-        // Handle the case if the time is already booked
-        dialogMessage.value = `The time slot ${selectedTime.value} is already booked.`;
+        console.log(`The time slot ${selectedTime.value} is already booked.`);
       }
     }
   }
 }
+
+
+
 
 // ... rest of the code ...
 
@@ -193,10 +196,15 @@ function closeSuccessDialog() {
 
 // Check if the time is already booked
 function isBooked(day, time) {
-  const doctor = doctorlist.doctors[doctorId];
-  const daySchedule = doctor.schedule[day];
-  return daySchedule ? daySchedule.includes(`${time} (Booked)`) : false;
+  const daySchedule = schedule.value[day];
+  const booked = daySchedule ? daySchedule.some(slot => slot.startsWith(time) && slot.includes("(Booked)")) : false;
+
+
+  console.log(`Checking if booked: Day = ${day}, Time = ${time}, Result = ${booked}`);
+  return booked;
 }
+
+
 
 onMounted(fetchSchedule);
 </script>
