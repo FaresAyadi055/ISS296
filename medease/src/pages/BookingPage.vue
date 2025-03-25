@@ -5,14 +5,9 @@
     <v-container>
       <v-btn to="/" class="mb-3" color="primary">Back</v-btn>
 
-      <div class="text-center mb-6">
-        <h1 class="text-primary font-weight-bold mb-2">
-          {{ doctorName }}
-        </h1>
-        <h2 class="text-blue-darken-1 text-subtitle-1">
-          {{ doctorSpecialty }} • {{ doctorLocation }}
-        </h2>
-      </div>
+      <h1 class="text-primary text-center font-weight-bold">
+        Schedule for {{ doctorName }}
+      </h1>
 
       <v-row class="my-4">
         <v-col cols="12" class="d-flex justify-space-between align-center">
@@ -86,7 +81,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { doctorlist } from '@/repos/doctors.js'; // Ensure the correct path is used
 import api from '@/plugins/axios';
@@ -94,10 +89,8 @@ import api from '@/plugins/axios';
 const route = useRoute();
 const doctorId = parseInt(route.params.doctorId, 10); // Get the doctor ID from route params
 
-// Default doctor info
+// Default doctor to empty if index is invalid
 const doctorName = ref('');
-const doctorSpecialty = ref('');
-const doctorLocation = ref('');
 const schedule = ref({});
 const formattedWeek = computed(() => {
   return currentWeek.value.toISOString().split("T")[0];
@@ -115,15 +108,11 @@ const selectedDay = ref('');
 
 // Fetch the schedule based on the doctor ID
 async function fetchSchedule() {
-  // Find the doctor by their ID (not array index)
-  const doctor = doctorlist.doctors.find(d => d.id === doctorId);
-  
-  if (doctor) {
+  if (doctorId >= 0 && doctorId < doctorlist.doctors.length) {
+    const doctor = doctorlist.doctors[doctorId];
     doctorName.value = doctor.name;
-    doctorSpecialty.value = doctor.specialty;
-    doctorLocation.value = doctor.location;
     
-    // Use the schedule directly from doctorlist
+    // Create a deep copy of the default schedule
     schedule.value = JSON.parse(JSON.stringify(doctor.schedule));
     
     try {
@@ -133,16 +122,13 @@ async function fetchSchedule() {
       
       // Make sure appointments is an array
       if (Array.isArray(appointments)) {
-        // Update both the local schedule and the doctorlist schedule
+        // Update the schedule with booked appointments
         appointments.forEach(appointment => {
           const daySchedule = schedule.value[appointment.day];
           if (daySchedule) {
             const timeIndex = daySchedule.findIndex(time => time === appointment.time);
             if (timeIndex !== -1) {
-              const bookedSlot = `${appointment.time} (Booked)`;
-              daySchedule[timeIndex] = bookedSlot;
-              // Update doctorlist schedule as well
-              doctor.schedule[appointment.day][timeIndex] = bookedSlot;
+              daySchedule[timeIndex] = `${appointment.time} (Booked)`;
             }
           }
         });
@@ -154,17 +140,6 @@ async function fetchSchedule() {
     console.error("Doctor not found for ID:", doctorId);
   }
 }
-
-// Watch for changes in the schedule and update doctorlist
-watch(schedule, (newSchedule) => {
-  const doctor = doctorlist.doctors.find(d => d.id === doctorId);
-  if (doctor) {
-    // Update the doctor's schedule in doctorlist when local schedule changes
-    Object.keys(newSchedule).forEach(day => {
-      doctor.schedule[day] = [...newSchedule[day]];
-    });
-  }
-}, { deep: true });
 
 function nextWeek() {
   currentWeek.value.setDate(currentWeek.value.getDate() + 7);
@@ -201,10 +176,7 @@ async function bookTime() {
   const doctorIndex = doctorId;
   console.log('Booking appointment for doctor:', doctorIndex);
   
-  // Find the doctor by ID in the doctorlist
-  const doctor = doctorlist.doctors.find(d => d.id === doctorId);
-  
-  if (doctor) {
+  if (doctorIndex >= 0 && doctorIndex < doctorlist.doctors.length) {
     const daySchedule = schedule.value[selectedDay.value];
     console.log('Selected day schedule:', daySchedule);
     console.log('Selected time:', selectedTime.value);
@@ -216,7 +188,7 @@ async function bookTime() {
       if (timeIndex !== -1 && !isBooked(selectedDay.value, selectedTime.value)) {
         try {
           console.log('Sending appointment data:', {
-            doctorId,
+            doctorId: doctorIndex,
             day: selectedDay.value,
             time: selectedTime.value,
             patientId: 'current-user-id'
@@ -224,7 +196,7 @@ async function bookTime() {
           
           // Save the appointment to the backend
           const response = await api.post('/appointments', {
-            doctorId,
+            doctorId: doctorIndex,
             day: selectedDay.value,
             time: selectedTime.value,
             patientId: 'current-user-id' // Replace with actual user ID from authentication
@@ -232,11 +204,8 @@ async function bookTime() {
           
           console.log('Backend response:', response.data);
 
-          // Update local state in BookingPage
+          // Update local state
           schedule.value[selectedDay.value][timeIndex] = `${selectedTime.value} (Booked)`;
-
-          // Update the doctor's schedule in doctorlist
-          doctor.schedule[selectedDay.value][timeIndex] = `${selectedTime.value} (Booked)`;
 
           // Close the confirmation dialog and show success dialog
           dialog.value = false;
@@ -252,8 +221,6 @@ async function bookTime() {
         console.log(`The time slot ${selectedTime.value} is already booked.`);
       }
     }
-  } else {
-    console.error("Doctor not found for ID:", doctorId);
   }
 }
 
