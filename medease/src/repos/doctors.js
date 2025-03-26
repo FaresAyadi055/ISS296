@@ -257,7 +257,7 @@ const initializeDoctorList = () => {
       email: "yassir.zribi@example.com",
       password: "passwordYassir",
       description: "Studied at University of Monastir and completed residency at Farhat Hached University Hospital",
-      image: "https://s3-eu-west-1.amazonaws.com/interviewquestionsanswers.org/wp-content/uploads/2021/11/doctor-questions.jpg",
+      image: "https://static.vecteezy.com/system/resources/thumbnails/026/375/249/small/ai-generative-portrait-of-confident-male-doctor-in-white-coat-and-stethoscope-standing-with-arms-crossed-and-looking-at-camera-photo.jpg",
       specialty: "Pediatrician",
       location: "Monastir",
       rating: 4.8,

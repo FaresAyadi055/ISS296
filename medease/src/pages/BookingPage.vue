@@ -5,7 +5,7 @@
 
     <v-main>
       <v-container>
-        <v-btn to="/" class="mb-3" color="primary">Back</v-btn>
+        <v-btn to="/booking" class="mb-3" color="primary">Back</v-btn>
 
         <div class="text-center mb-6">
           <h1 class="text-primary font-weight-bold mb-2">
