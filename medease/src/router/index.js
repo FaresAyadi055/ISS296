@@ -13,6 +13,7 @@ import { routes } from 'vue-router/auto-routes'
 
 import BookingPage from "@/pages/BookingPage.vue";
 import Booking from '@/pages/booking.vue';
+import EPrescription from '@/components/EPrescription.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -22,6 +23,12 @@ const router = createRouter({
     {
       path: "/booking/:doctorId",  // Change this to use doctorId
       component: BookingPage,  // Component you want to display
+    },
+    {
+      path: '/doctor/prescription',
+      name: 'EPrescription',
+      component: EPrescription,
+      meta: { requiresAuth: true, role: 'doctor' }
     }
   ]),
 })

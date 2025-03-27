@@ -3,7 +3,8 @@
       <v-toolbar-title class="font-weight-bold mr-4" style="color: #D5DE58;">MedEase.</v-toolbar-title>
       
       <v-btn class="mx-2" rounded style="background-color: #579AFE; color: #FFFFFF;" to="/HomeDoctor">Home</v-btn>
-      <v-btn class="mx-2" rounded style="background-color: #579AFE; color: #FFFFFF;" to="/doctorSchedule">Scheduele</v-btn>
+      <v-btn class="mx-2" rounded style="background-color: #579AFE; color: #FFFFFF;" to="/doctorSchedule">Schedule</v-btn>
+      <v-btn class="mx-2" rounded style="background-color: #579AFE; color: #FFFFFF;" to="/doctor/prescription">E-Prescriptions</v-btn>
       
       <v-spacer></v-spacer>
       
