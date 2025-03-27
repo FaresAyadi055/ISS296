@@ -3,60 +3,112 @@
 </template>
 
 <script>
-import L from 'leaflet'; // Import Leaflet
-import 'leaflet/dist/leaflet.css'; // Import Leaflet CSS
-import { Geocoder, geocoders } from 'leaflet-control-geocoder'; // Import Geocoder
-import 'leaflet-control-geocoder/dist/Control.Geocoder.css'; // Import Geocoder CSS
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { Geocoder, geocoders } from 'leaflet-control-geocoder';
+import 'leaflet-control-geocoder/dist/Control.Geocoder.css';
+import hospitalsData from '@/repos/hospitals.json';
+
+// Fix default marker icons (Leaflet issue with Webpack/Vite)
+const iconRetinaUrl = new URL('leaflet/dist/images/marker-icon-2x.png', import.meta.url).href;
+const iconUrl = new URL('leaflet/dist/images/marker-icon.png', import.meta.url).href;
+const shadowUrl = new URL('leaflet/dist/images/marker-shadow.png', import.meta.url).href;
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl,
+  iconUrl,
+  shadowUrl,
+});
 
 export default {
   name: 'LeafletMap',
   props: {
     center: {
-      type: Array, // [lat, lng]
-      default: () => [36.8065, 10.1815], // Default to Tunis
+      type: Array,
+      default: () =>  [36.8065, 10.1815],
     },
     zoom: {
       type: Number,
-      default: 13, // Default zoom level
+      default: 7,
     },
   },
   data() {
     return {
-      map: null, // Leaflet map instance
-      geocoder: null, // Geocoder instance
+      map: null,
+      geocoder: null,
+      markers: [],
     };
   },
   mounted() {
     this.initMap();
     this.addGeocoder();
+    this.addHospitalMarkers();
   },
   methods: {
-    // Initialize the map
     initMap() {
       this.map = L.map(this.$refs.mapContainer).setView(this.center, this.zoom);
 
-      // Add a tile layer (OpenStreetMap)
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
       }).addTo(this.map);
     },
 
-    // Add geocoder (without displaying the search bar)
     addGeocoder() {
       this.geocoder = new Geocoder({
-        defaultMarkGeocode: false, // Disable default marker
-        collapsed: false, // Hide the search bar
+        defaultMarkGeocode: false,
+        collapsed: false,
       });
-
-      // Add the geocoder to the map (but keep it hidden)
       this.geocoder.addTo(this.map);
     },
 
-    // Programmatically search for "hospitals"
+    addHospitalMarkers() {
+      this.clearMarkers();
 
+      const typeIcons = {
+        General: this.createIcon('blue'),
+        Private: this.createIcon('green'),
+        Public: this.createIcon('red'),
+        Specialized: this.createIcon('orange'),
+        Teaching: this.createIcon('purple'),
+        Surgical: this.createIcon('pink'),
+      };
+
+      hospitalsData.hospitals.forEach(hospital => {
+        const marker = L.marker([hospital.latitude, hospital.longitude], {
+          icon: typeIcons[hospital.type] || typeIcons.General,
+        })
+          .addTo(this.map)
+          .bindPopup(`
+            <b>${hospital.name}</b><br>
+            Type: ${hospital.type}<br>
+            Address: ${hospital.address}<br>
+            Phone: ${hospital.phone}
+          `);
+
+        this.markers.push(marker);
+      });
+
+      if (this.markers.length > 0) {
+        const group = new L.featureGroup(this.markers);
+        this.map.fitBounds(group.getBounds().pad(0.1));
+      }
+    },
+
+    createIcon(color) {
+      return L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="background-color:${color}; width:20px; height:20px; border-radius:50%; border:2px solid white; display:flex; justify-content:center; align-items:center; color:white; font-weight:bold;">H</div>`,
+        iconSize: [24, 24],
+      });
+    },
+
+    clearMarkers() {
+      this.markers.forEach(marker => marker.remove());
+      this.markers = [];
+    },
   },
   beforeDestroy() {
-    // Clean up the map instance when the component is destroyed
+    this.clearMarkers();
     if (this.map) {
       this.map.remove();
     }
@@ -65,15 +117,15 @@ export default {
 </script>
 
 <style scoped>
-.map-container {
-  background: white; /* Set the background of the parent container to white */
-  padding: 16px; /* Optional: Add padding */
-  border-radius: 8px; /* Optional: Add rounded corners */
+.leaflet-map {
+  height: 500px;
+  width: 100%;
+  border-radius: 8px;
 }
 
-.leaflet-map {
-  height: 500px; /* Set a fixed height for the map */
-  width: 100%; /* Full width */
-  border-radius: 8px; /* Optional: Add rounded corners */
+.custom-marker {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 </style>
