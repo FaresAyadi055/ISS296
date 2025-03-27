@@ -31,8 +31,8 @@ export default {
   },
   data() {
     return {
-      mapCenter: [36.80272, 10.16074], // Initial map center (Tunis)
-      mapZoom: 15, // Initial zoom level
+      mapCenter: [36.8065, 10.1815], // Initial map center (Tunis)
+      mapZoom: 7, // Initial zoom level
       mapMarkers: [
         {
           lat: 36.80272,
