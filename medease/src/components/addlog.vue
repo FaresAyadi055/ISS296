@@ -46,8 +46,8 @@
   
   <script>
   import { ref } from 'vue';
-  import { useRouter } from 'vue-router'; // Import useRouter
-  import { doctorlist } from '../repos/doctors.js'; // Import doctor data
+  import { useRouter } from 'vue-router';
+  import axios from 'axios';
   
   export default {
     setup() {
@@ -62,17 +62,27 @@
       const isOnMedications = ref(false);
       const hasAllergies = ref(false);
       const photo = ref(null);
-      const router = useRouter(); // Initialize router
+      const router = useRouter();
+      const error = ref('');
   
-      const handleLogin = () => {
-        const foundDoctor = doctorlist.doctors.find(doctor => 
-          doctor.email === email.value && doctor.password === password.value
-        );
-        if (foundDoctor) {
-          console.log('Doctor logged in:', foundDoctor);
-          router.push('/HomeDoctor'); // Redirect to HomeDoctor page
-        } else {
-          alert('Login failed: Invalid email or password.');
+      const handleLogin = async () => {
+        try {
+          const response = await axios.post('http://localhost:3001/api/doctors/login', {
+            email: email.value,
+            password: password.value
+          });
+  
+          const { token, doctor } = response.data;
+          
+          // Store token and doctor info
+          localStorage.setItem('token', token);
+          localStorage.setItem('doctor', JSON.stringify(doctor));
+          
+          // Redirect to home page
+          router.push('/HomeDoctor');
+        } catch (error) {
+          console.error('Login error:', error);
+          alert(error.response?.data?.message || 'Login failed. Please try again.');
         }
       };
   
@@ -95,6 +105,7 @@
         photo,
         handleLogin,
         handleRegister,
+        error
       };
     }
   };

@@ -87,7 +87,6 @@
               label="Do you have any allergies?" >
             </v-checkbox>
   
-            
             <v-textarea 
               v-if="hasHealthConditions" 
               v-model="healthConditions.chronic" 
@@ -95,7 +94,6 @@
               hint="e.g., Diabetes">
             </v-textarea>
   
-            <!-- If user is on medications -->
             <v-textarea 
               v-if="isOnMedications" 
               v-model="healthConditions.medications" 
@@ -103,7 +101,6 @@
               hint="List medications"
             ></v-textarea>
   
-            <!-- If user has allergies -->
             <v-textarea 
               v-if="hasAllergies" 
               v-model="healthConditions.allergies" 
@@ -132,8 +129,8 @@
   
   <script>
   import { ref } from 'vue';
-  import patientData from '../repos/patient.js'; // Import patient data
   import { useRouter } from 'vue-router';
+  import axios from 'axios';
   
   export default {
     setup() {
@@ -149,40 +146,53 @@
       const hasAllergies = ref(false);
       const photo = ref(null);
       const router = useRouter();
+      const error = ref('');
   
-      const handleLogin = () => {
-        const foundPatient = patientData.patients.find(patient => 
-          patient.email === email.value && patient.password === password.value
-        );
-        if (foundPatient) {
-          // Store the patient's ID in session storage
-          sessionStorage.setItem('currentPatient', foundPatient.id.toString());
+      const handleLogin = async () => {
+        try {
+          const response = await axios.post('http://localhost:3001/api/patients/login', {
+            email: email.value,
+            password: password.value
+          });
+  
+          const { token, patient } = response.data;
           
-          // Check if there's a pending booking redirect
-          const redirectPath = sessionStorage.getItem('bookingRedirect');
-          if (redirectPath) {
-            sessionStorage.removeItem('bookingRedirect'); // Clear the redirect
-            router.push(redirectPath);
-          } else {
-            router.push('/HomePatient'); // Default redirect
-          }
-        } else {
-          alert('Login failed: Invalid email or password.');
+          // Store token and patient info
+          localStorage.setItem('token', token);
+          localStorage.setItem('patient', JSON.stringify(patient));
+          
+          // Redirect to home page
+          router.push('/HomePatient');
+        } catch (error) {
+          console.error('Login error:', error);
+          alert(error.response?.data?.message || 'Login failed. Please try again.');
         }
       };
   
-      const handleRegister = () => {
-        const newPatient = {
-          id: patientData.patients.length + 1, // Simple ID generation
-          firstName: fullName.value.split(' ')[0],
-          lastName: fullName.value.split(' ')[1],
-          email: regEmail.value,
-          password: regPassword.value,
-          // Add other fields as necessary
-        };
-        patientData.patients.push(newPatient); // Add to the patient data
-        console.log('Registered new patient:', newPatient);
-        showRegister.value = false;
+      const handleRegister = async () => {
+        try {
+          const [firstName, lastName] = fullName.value.split(' ');
+          
+          const response = await axios.post('http://localhost:3001/api/patients/register', {
+            firstName,
+            lastName,
+            email: regEmail.value,
+            password: regPassword.value,
+            healthConditions: {
+              chronic: hasHealthConditions.value ? healthConditions.value.chronic : '',
+              medications: isOnMedications.value ? healthConditions.value.medications : '',
+              allergies: hasAllergies.value ? healthConditions.value.allergies : ''
+            }
+          });
+  
+          if (response.status === 201) {
+            alert('Registration successful! Please login.');
+            showRegister.value = false;
+          }
+        } catch (error) {
+          console.error('Registration error:', error);
+          alert(error.response?.data?.message || 'Registration failed. Please try again.');
+        }
       };
   
       return {
@@ -199,6 +209,7 @@
         photo,
         handleLogin,
         handleRegister,
+        error
       };
     }
   };

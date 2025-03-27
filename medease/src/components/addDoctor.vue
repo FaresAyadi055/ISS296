@@ -11,6 +11,12 @@
           <!-- Last Name -->
           <v-text-field v-model="lastName" label="Last Name" required></v-text-field>
 
+          <!-- Email -->
+          <v-text-field v-model="email" label="Email" type="email" required></v-text-field>
+
+          <!-- Password -->
+          <v-text-field v-model="password" label="Password" type="password" required></v-text-field>
+
           <!-- Address -->
           <v-text-field v-model="address" label="Address" required></v-text-field>
 
@@ -53,7 +59,10 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { doctorlist } from '../repos/doctors.js'; // Import doctor data
+import { useRouter } from 'vue-router';
+import axios from 'axios';
+
+const router = useRouter();
 
 // Form fields
 const firstName = ref("");
@@ -63,8 +72,11 @@ const specialty = ref("");
 const phoneNumber = ref("");
 const photo = ref(null);
 const location = ref("");
+const email = ref("");
+const password = ref("");
 const dialog = ref(false);
 const autocompleteInput = ref(null);
+const error = ref("");
 
 // Initialize Google Places Autocomplete
 const initGoogleAutocomplete = () => {
@@ -83,37 +95,33 @@ const initGoogleAutocomplete = () => {
 };
 
 // Handle form submission
-const handleRequest = () => {
-  const newDoctor = {
-    id: doctorlist.doctors.length + 1, // Simple ID generation
-    firstName: firstName.value,
-    lastName: lastName.value,
-    address: address.value,
-    specialty: specialty.value,
-    phoneNumber: phoneNumber.value,
-    photo: photo.value,
-    email: email.value, // Add email field
-    password: password.value, // Add password field
-  };
-  doctorlist.doctors.push(newDoctor); // Add to the doctor data
-  console.log("Doctor Request Sent:", newDoctor);
-  dialog.value = false;
-  alert("Your request has been sent successfully!");
+const handleRequest = async () => {
+  try {
+    const response = await axios.post('http://localhost:3001/api/doctors/register', {
+      firstName: firstName.value,
+      lastName: lastName.value,
+      email: email.value,
+      password: password.value,
+      address: address.value,
+      specialty: specialty.value,
+      phoneNumber: phoneNumber.value,
+      location: location.value
+    });
+
+    if (response.status === 201) {
+      alert('Registration successful! Please login.');
+      router.push('/doctorSignin');
+    }
+  } catch (error) {
+    console.error('Registration error:', error);
+    alert(error.response?.data?.message || 'Registration failed. Please try again.');
+  }
 };
 
 // Confirm request
 const confirmRequest = () => {
-  console.log("Doctor Request Sent:", {
-    firstName: firstName.value,
-    lastName: lastName.value,
-    address: address.value,
-    specialty: specialty.value,
-    phoneNumber: phoneNumber.value,
-    photo: photo.value,
-    location: location.value,
-  });
+  handleRequest();
   dialog.value = false;
-  alert("Your request has been sent successfully!");
 };
 
 onMounted(() => {
