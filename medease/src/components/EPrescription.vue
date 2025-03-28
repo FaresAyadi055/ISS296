@@ -10,16 +10,30 @@
             
             <v-form @submit.prevent="generatePrescription">
               <!-- Patient Information -->
-              <v-text-field
-                v-model="patientName"
-                label="Patient Name"
+              <v-select
+                v-model="selectedPatient"
+                :items="patients"
+                item-title="name"
+                item-value="id"
+                label="Select Patient"
                 required
                 class="mb-4 black-text"
                 variant="outlined"
                 color="primary"
                 bg-color="white"
                 style="background-color: white;"
-              ></v-text-field>
+                :loading="loadingPatients"
+              ></v-select>
+
+              <div v-if="selectedPatient" class="d-flex align-center mb-4">
+                <v-avatar size="40" class="mr-2">
+                  <v-img :src="selectedPatient.photo || '/default-avatar.png'" alt="Patient Photo"></v-img>
+                </v-avatar>
+                <div>
+                  <p class="text-subtitle-1 mb-0" style="color: black;">ID: {{ selectedPatient.id }}</p>
+                  <p class="text-caption mb-0" style="color: black;">Age: {{ selectedPatient.age }}</p>
+                </div>
+              </div>
 
               <!-- Medications List -->
               <div v-for="(med, index) in medications" :key="index" class="mb-6">
@@ -128,14 +142,24 @@
                         <v-icon>mdi-delete</v-icon>
                       </v-btn>
                     </div>
-                    <v-btn
-                      color="primary"
-                      class="mb-4 mt-2"
-                      @click="addReminderTime(index)"
-                      style="background-color: #579AFE; color: white;"
-                    >
-                      Add Reminder Time
-                    </v-btn>
+                    <div class="d-flex gap-2">
+                      <v-btn
+                        color="primary"
+                        class="mb-4 mt-2"
+                        @click="addReminderTime(index)"
+                        style="background-color: #579AFE; color: white;"
+                      >
+                        Add Reminder Time
+                      </v-btn>
+                      <v-btn
+                        color="success"
+                        class="mb-4 mt-2"
+                        @click="testNotification(index)"
+                        style="background-color: #4CAF50; color: white;"
+                      >
+                        Test Notification
+                      </v-btn>
+                    </div>
                   </div>
                 </v-card>
               </div>
@@ -169,10 +193,11 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { notificationService } from '@/services/NotificationService'
 import navbardoctor from '@/components/navbardoctor.vue'
 import footer from '@/components/footer.vue'
+import { patientService } from '@/services/PatientService'
 
 export default {
   name: 'EPrescription',
@@ -182,7 +207,9 @@ export default {
   },
   setup() {
     const loading = ref(false)
-    const patientName = ref('')
+    const loadingPatients = ref(false)
+    const selectedPatient = ref(null)
+    const patients = ref([])
     
     const medications = ref([{
       name: '',
@@ -233,26 +260,64 @@ export default {
       medications.value[medicationIndex].reminders.times.splice(timeIndex, 1)
     }
 
+    const testNotification = async (medicationIndex) => {
+      const medication = medications.value[medicationIndex]
+      try {
+        // Create a test notification for 5 seconds from now
+        const testTime = new Date(Date.now() + 5000)
+        await notificationService.scheduleNotification({
+          title: `Test Reminder: ${medication.name}`,
+          body: `Take ${medication.dosage} of ${medication.name}`,
+          scheduledTime: testTime
+        })
+        alert('Test notification scheduled! You will receive it in 5 seconds.')
+      } catch (error) {
+        console.error('Error scheduling test notification:', error)
+        alert('Error scheduling test notification. Please check notification permissions.')
+      }
+    }
+
+    const loadPatients = async () => {
+      loadingPatients.value = true
+      try {
+        const patientsData = await patientService.getAllPatients()
+        patients.value = patientsData
+      } catch (error) {
+        console.error('Error loading patients:', error)
+        // Show error message to user
+      } finally {
+        loadingPatients.value = false
+      }
+    }
+
     const generatePrescription = async () => {
+      if (!selectedPatient.value) {
+        alert('Please select a patient first')
+        return
+      }
+
       loading.value = true
       try {
         // Here you would typically make an API call to save the prescription
         console.log('Generating prescription:', {
-          patientName: patientName.value,
+          patientId: selectedPatient.value._id,
+          patientName: selectedPatient.value.name,
           medications: medications.value
         })
         
         // Schedule notifications for medications with reminders enabled
         notificationService.scheduleMedicationReminders(medications.value)
         
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        // Add medications to patient's profile
+        for (const medication of medications.value) {
+          await patientService.addMedication(selectedPatient.value._id, medication)
+        }
         
         // Show success message
         alert('E-Prescription generated successfully!')
         
         // Reset form
-        patientName.value = ''
+        selectedPatient.value = null
         medications.value = [{
           name: '',
           dosage: '',
@@ -272,15 +337,22 @@ export default {
       }
     }
 
+    onMounted(() => {
+      loadPatients()
+    })
+
     return {
       loading,
-      patientName,
+      loadingPatients,
+      selectedPatient,
+      patients,
       medications,
       frequencyOptions,
       addMedication,
       removeMedication,
       addReminderTime,
       removeReminderTime,
+      testNotification,
       generatePrescription
     }
   }
