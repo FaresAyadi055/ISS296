@@ -373,6 +373,9 @@ const loadPatientData = async () => {
     if (response?.data) {
       patient.value = response.data; // Update patient data
       localStorage.setItem('patient', JSON.stringify(response.data)); // Update local storage
+
+      // Print all patient data
+      console.log('Fetched Patient Data:', response.data);
     }
 
     // Initialize editedPatient and healthConditions
@@ -407,14 +410,18 @@ const toggleEdit = async () => {
         return;
       }
 
+      // Print current patient data before update
+      console.log('Current Patient Data Before Update:', patient.value);
+      console.log('Edited Patient Data:', updatedPatient);
+
       const response = await api.put(`/patients/update/${patient.value._id}`, updatedPatient);
+
+      // Print updated patient data after the API call
+      console.log('Updated Patient Data:', response.data);
 
       patient.value = response.data; // Update patient data
       isEditing.value = false; // Exit edit mode
       showSuccessDialog.value = true; // Show success dialog
-
-      console.log('Current Patient Data:', patient.value);
-      console.log('Edited Patient Data:', editedPatient.value);
     } catch (error) {
       console.error('Error updating profile:', error);
       alert('Failed to update profile. Please try again.');

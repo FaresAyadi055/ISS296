@@ -210,6 +210,10 @@ app.post('/api/patients/login', async (req, res) => {
         firstName: patient.firstName,
         lastName: patient.lastName,
         email: patient.email,
+        address: patient.address,
+        phone: patient.phone,
+        gender: patient.gender,
+        healthConditions: patient.healthConditions
       }
     });
   } catch (error) {
