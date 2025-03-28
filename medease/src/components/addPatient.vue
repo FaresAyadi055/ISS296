@@ -124,6 +124,32 @@
           </v-form>
         </v-card>
       </v-container>
+
+      <!-- Error Dialog -->
+      <v-dialog v-model="errorDialog" max-width="400px">
+        <v-card class="custom-dialog-card">
+          <v-card-title class="headline text-center">Error</v-card-title>
+          <v-card-text class="text-center">
+            <p class="font-weight-medium text-blue">{{ errorMessage }}</p>
+          </v-card-text>
+          <v-card-actions class="d-flex justify-center">
+            <v-btn @click="errorDialog = false" color="blue" class="custom-btn">Okay</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <!-- Success Dialog -->
+      <v-dialog v-model="successDialog" max-width="400px">
+        <v-card class="custom-dialog-card">
+          <v-card-title class="headline text-center">Success</v-card-title>
+          <v-card-text class="text-center">
+            <p class="font-weight-medium text-blue">{{ successMessage }}</p>
+          </v-card-text>
+          <v-card-actions class="d-flex justify-center">
+            <v-btn @click="successDialog = false" color="blue" class="custom-btn">Okay</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
     </v-app>
   </template>
   
@@ -146,7 +172,20 @@
       const hasAllergies = ref(false);
       const photo = ref(null);
       const router = useRouter();
-      const error = ref('');
+      const errorDialog = ref(false);
+      const successDialog = ref(false);
+      const errorMessage = ref('');
+      const successMessage = ref('');
+  
+      const showError = (message) => {
+        errorMessage.value = message;
+        errorDialog.value = true;
+      };
+  
+      const showSuccess = (message) => {
+        successMessage.value = message;
+        successDialog.value = true;
+      };
   
       const handleLogin = async () => {
         try {
@@ -161,11 +200,21 @@
           localStorage.setItem('token', token);
           localStorage.setItem('patient', JSON.stringify(patient));
           
-          // Redirect to home page
-          router.push('/HomePatient');
+          // Check for pending booking
+          const pendingBooking = sessionStorage.getItem('pendingBooking');
+          if (pendingBooking) {
+            const bookingData = JSON.parse(pendingBooking);
+            // Clear the pending booking
+            sessionStorage.removeItem('pendingBooking');
+            // Redirect to the booking page with the doctor ID
+            router.push(`/booking/${bookingData.doctorId}`);
+          } else {
+            // No pending booking, redirect to home page
+            router.push('/HomePatient');
+          }
         } catch (error) {
           console.error('Login error:', error);
-          alert(error.response?.data?.message || 'Login failed. Please try again.');
+          showError(error.response?.data?.message || 'Login failed. Please try again.');
         }
       };
   
@@ -186,12 +235,12 @@
           });
   
           if (response.status === 201) {
-            alert('Registration successful! Please login.');
+            showSuccess('Registration successful! Please login.');
             showRegister.value = false;
           }
         } catch (error) {
           console.error('Registration error:', error);
-          alert(error.response?.data?.message || 'Registration failed. Please try again.');
+          showError(error.response?.data?.message || 'Registration failed. Please try again.');
         }
       };
   
@@ -209,7 +258,12 @@
         photo,
         handleLogin,
         handleRegister,
-        error
+        errorDialog,
+        successDialog,
+        errorMessage,
+        successMessage,
+        showError,
+        showSuccess
       };
     }
   };
@@ -224,6 +278,24 @@
   /* Keep button text color as is */
   .login-button, .register-button {
       color: white; /* Assuming primary color is white */
+  }
+
+  /* Custom Dialog Styling */
+  .custom-dialog-card {
+    background-color: white !important;
+    border-radius: 15px !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .custom-btn {
+    border-radius: 25px !important;
+    font-weight: bold;
+    padding: 10px 20px;
+    text-transform: capitalize;
+  }
+
+  .text-blue {
+    color: #1976D2 !important;
   }
   </style>
   
