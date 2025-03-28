@@ -29,6 +29,20 @@ const router = createRouter({
       name: 'EPrescription',
       component: EPrescription,
       meta: { requiresAuth: true, role: 'doctor' }
+    },
+    {
+      path: '/profile/:id',
+      name: 'PatientProfile',
+      component: () => import('@/pages/patientProfile.vue'),
+      meta: {
+        requiresAuth: true,
+        role: 'patient'
+      }
+    },
+    {
+      path: '/doctor/profile/:id',
+      name: 'DoctorProfile',
+      component: () => import('@/pages/doctorProfile.vue')
     }
   ]),
 })

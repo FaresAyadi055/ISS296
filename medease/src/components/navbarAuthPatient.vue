@@ -28,6 +28,15 @@
           <v-btn 
             variant="text"
             block 
+            class="profile-btn"
+            to="/patient/profile"
+            @click="menu = false"
+          >
+            View Profile
+          </v-btn>
+          <v-btn 
+            variant="text"
+            block 
             class="logout-btn"
             @click="logout"
           >
@@ -71,7 +80,7 @@ const logout = () => {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.logout-btn {
+.profile-btn, .logout-btn {
   color: #1976D2 !important;
   font-weight: 500;
   text-transform: none;
@@ -79,7 +88,7 @@ const logout = () => {
   transition: all 0.3s ease;
 }
 
-.logout-btn:hover {
+.profile-btn:hover, .logout-btn:hover {
   color: #1976D2 !important;
   background-color: rgba(25, 118, 210, 0.04) !important;
   box-shadow: 0 2px 4px rgba(25, 118, 210, 0.15);

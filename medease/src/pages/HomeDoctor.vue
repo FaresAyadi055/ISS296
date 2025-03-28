@@ -90,6 +90,24 @@
             </p>
           </v-col>
         </v-row>
+
+        <v-card
+          v-for="doctor in doctors"
+          :key="doctor.id"
+          class="mb-4"
+          @click="router.push(`/doctor/profile/${doctor.id}`)"
+          style="cursor: pointer;"
+        >
+          <v-card-item>
+            <v-card-title>
+              <v-avatar size="40" class="mr-2">
+                <v-img :src="doctor.photo || 'https://via.placeholder.com/150'"></v-img>
+              </v-avatar>
+              Dr. {{ doctor.firstName }} {{ doctor.lastName }}
+            </v-card-title>
+            <v-card-subtitle>{{ doctor.specialty }}</v-card-subtitle>
+          </v-card-item>
+        </v-card>
       </v-container>
     </v-main>
 
@@ -103,7 +121,33 @@ import Footer from '@/components/footer.vue'
 import doctorIllustration from '@/assets/doctor-illustration.png'
 import heartIcon from '@/assets/heart-icon.png'
 import calendarIcon from '@/assets/calendar-icon.png'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
+
+const doctors = [
+  {
+    id: 1,
+    firstName: 'John',
+    lastName: 'Doe',
+    specialty: 'Cardiologist',
+    photo: 'https://via.placeholder.com/150'
+  },
+  {
+    id: 2,
+    firstName: 'Jane',
+    lastName: 'Smith',
+    specialty: 'Dermatologist',
+    photo: 'https://via.placeholder.com/150'
+  },
+  {
+    id: 3,
+    firstName: 'Michael',
+    lastName: 'Johnson',
+    specialty: 'Orthopedic Surgeon',
+    photo: 'https://via.placeholder.com/150'
+  }
+]
 </script>
 
 <style scoped>
