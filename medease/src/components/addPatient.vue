@@ -194,12 +194,23 @@
             password: password.value
           });
   
+          console.log('Login Response:', response.data);
+  
           const { token, patient } = response.data;
-          
+  
           // Store token and patient info
           localStorage.setItem('token', token);
-          localStorage.setItem('patient', JSON.stringify(patient));
-          
+          localStorage.setItem('patient', JSON.stringify({
+            id: patient._id, // Ensure the patient ID is stored
+            firstName: patient.firstName,
+            lastName: patient.lastName,
+            email: patient.email,
+            // Add any other patient data you need
+          }));
+  
+          // Debugging log to verify stored patient data
+          console.log('Patient found:', patient);
+  
           // Check for pending booking
           const pendingBooking = sessionStorage.getItem('pendingBooking');
           if (pendingBooking) {

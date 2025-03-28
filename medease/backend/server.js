@@ -202,13 +202,14 @@ app.post('/api/patients/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
+    // Return token and patient data
     res.json({
       token,
       patient: {
-        id: patient._id,
+        _id: patient._id,
         firstName: patient.firstName,
         lastName: patient.lastName,
-        email: patient.email
+        email: patient.email,
       }
     });
   } catch (error) {
@@ -279,6 +280,40 @@ app.delete('/api/appointments/:id', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+app.get('/api/patients/:id', async (req, res) => {
+  try {
+    const patient = await Patient.findById(req.params.id);
+    if (!patient) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+    res.json(patient);
+  } catch (error) {
+    res.status(500).json({ message: 'Error retrieving patient' });
+  }
+});
+app.put('/api/patients/update/:id', async (req, res) => {
+  try {
+    const updatedPatient = await Patient.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!updatedPatient) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+    res.json(updatedPatient);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating patient' });
+  }
+});
+const fetchPatient = async () => {
+  try {
+    const response = await api.get(`/patients/${patientId}`);
+    patient.value = response.data;
+    console.log("Fetched Patient Data:", patient.value);
+  } catch (error) {
+    console.error("Error fetching patient:", error);
+  }
+};
+
+
+
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

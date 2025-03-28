@@ -342,6 +342,8 @@ const showSuccessDialog = ref(false);
 const isUserLoggedIn = () => {
   const token = localStorage.getItem('token');
   const patient = localStorage.getItem('patient');
+  console.log('Token:', token); // Debugging log
+  console.log('Patient Data:', patient); // Debugging log
   return !!(token && patient);
 };
 
@@ -356,25 +358,31 @@ const loadPatientData = async () => {
 
     const patientData = JSON.parse(storedPatient);
     
-    // Use the stored patient data as fallback
-    patient.value = patientData;
-    editedPatient.value = JSON.parse(JSON.stringify(patientData));
-
-    // Initialize health conditions if they don't exist
-    if (!patient.value.healthConditions) {
-      patient.value.healthConditions = {
-        chronic: '',
-        medications: '',
-        allergies: '',
-        reminders: []
-      };
-    }
-    
-    // Replace placeholder image with a reliable default image
-    if (!patient.value.photo || patient.value.photo.includes('via.placeholder.com')) {
-      patient.value.photo = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNTAiIGhlaWdodD0iMTUwIiB2aWV3Qm94PSIwIDAgMTUwIDE1MCI+PHJlY3Qgd2lkdGg9IjE1MCIgaGVpZ2h0PSIxNTAiIGZpbGw9IiNlMmU4ZjAiLz48dGV4dCB4PSI3NSIgeT0iNzUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iNjAiIGZpbGw9IiM5NGE3YjkiPlA8L3RleHQ+PC9zdmc+';
+    // Ensure patient ID is valid
+    if (!patientData.id) {
+      console.error('Patient ID is undefined');
+      alert('Patient ID is missing. Please log in again.');
+      router.push('/signIn');
+      return;
     }
 
+    patient.value = patientData; // Set the patient data
+
+    // Fetch latest patient data from the API
+    const response = await api.get(`/patients/${patientData.id}`);
+    if (response?.data) {
+      patient.value = response.data; // Update patient data
+      localStorage.setItem('patient', JSON.stringify(response.data)); // Update local storage
+    }
+
+    // Initialize editedPatient and healthConditions
+    editedPatient.value = JSON.parse(JSON.stringify(patient.value));
+    patient.value.healthConditions = patient.value.healthConditions ?? {
+      chronic: '',
+      medications: '',
+      allergies: '',
+      reminders: [],
+    };
   } catch (error) {
     console.error('Error loading patient data:', error);
     router.push('/signIn');
@@ -385,38 +393,35 @@ const loadPatientData = async () => {
 const toggleEdit = async () => {
   if (isEditing.value) {
     try {
-      // Get the current patient data
-      const storedPatient = localStorage.getItem('patient');
-      const patientData = JSON.parse(storedPatient);
-
-      // Prepare the updated data
       const updatedPatient = {
-        ...patientData,
         ...editedPatient.value,
         healthConditions: {
           ...editedPatient.value.healthConditions
         }
       };
 
-      // Update localStorage with the new data
-      localStorage.setItem('patient', JSON.stringify(updatedPatient));
-      
-      // Update component state
-      patient.value = updatedPatient;
-      
-      // Reset edit mode
-      isEditing.value = false;
+      // Ensure patient ID is defined
+      if (!patient.value._id) {
+        console.error('Patient ID is undefined');
+        alert('Cannot update profile. Patient ID is missing.');
+        return;
+      }
 
-      // Show success dialog instead of alert
-      showSuccessDialog.value = true;
+      const response = await api.put(`/patients/update/${patient.value._id}`, updatedPatient);
+
+      patient.value = response.data; // Update patient data
+      isEditing.value = false; // Exit edit mode
+      showSuccessDialog.value = true; // Show success dialog
+
+      console.log('Current Patient Data:', patient.value);
+      console.log('Edited Patient Data:', editedPatient.value);
     } catch (error) {
       console.error('Error updating profile:', error);
       alert('Failed to update profile. Please try again.');
     }
   } else {
-    // Start editing - ensure we have all fields
-    editedPatient.value = JSON.parse(JSON.stringify(patient.value));
-    isEditing.value = true;
+    editedPatient.value = JSON.parse(JSON.stringify(patient.value)); // Initialize editedPatient
+    isEditing.value = true; // Enter edit mode
   }
 };
 
