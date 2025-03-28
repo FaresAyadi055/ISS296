@@ -14,6 +14,7 @@ import { routes } from 'vue-router/auto-routes'
 import BookingPage from "@/pages/BookingPage.vue";
 import Booking from '@/pages/booking.vue';
 import EPrescription from '@/components/EPrescription.vue'
+import PatientProfile from '@/components/PatientProfile.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -31,6 +32,7 @@ const router = createRouter({
       meta: { requiresAuth: true, role: 'doctor' }
     },
     {
+<<<<<<< HEAD
       path: '/profile/:id',
       name: 'PatientProfile',
       component: () => import('@/pages/patientProfile.vue'),
@@ -43,6 +45,12 @@ const router = createRouter({
       path: '/doctor/profile/:id',
       name: 'DoctorProfile',
       component: () => import('@/pages/doctorProfile.vue')
+=======
+      path: '/doctor/patient/:id',
+      name: 'PatientProfile',
+      component: PatientProfile,
+      meta: { requiresAuth: true, role: 'doctor' }
+>>>>>>> 4b6637400a6e079daa06d57a36fa4d8958281204
     }
   ]),
 })
