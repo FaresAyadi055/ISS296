@@ -25,25 +25,29 @@
             <div class="text-caption pb-2" style="color: #579AFE;">Connected</div>
           </v-card-text>
           <v-divider></v-divider>
-          <v-card-actions class="pa-4">
+          <v-card-text class="pa-4 d-flex flex-column gap-2">
             <v-btn 
               variant="text"
               block 
-              class="profile-btn"
-              to="/patient/profile"
+              class="profile-btn mb-2"
+              to="/patientProfile"
               @click="menu = false"
             >
+              <v-icon start icon="mdi-account" class="mr-2"></v-icon>
               View Profile
             </v-btn>
+            <v-divider class="my-2"></v-divider>
             <v-btn 
               variant="text"
               block 
               class="logout-btn"
               @click="logout"
+              color="error"
             >
+              <v-icon start icon="mdi-logout" class="mr-2"></v-icon>
               Logout
             </v-btn>
-          </v-card-actions>
+          </v-card-text>
         </v-card>
       </v-menu>
     </template>
@@ -107,7 +111,7 @@ const logout = () => {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.profile-btn, .logout-btn {
+.profile-btn {
   color: #1976D2 !important;
   font-weight: 500;
   text-transform: none;
@@ -115,10 +119,23 @@ const logout = () => {
   transition: all 0.3s ease;
 }
 
-.profile-btn:hover, .logout-btn:hover {
+.logout-btn {
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+  transition: all 0.3s ease;
+}
+
+.profile-btn:hover {
   color: #1976D2 !important;
   background-color: rgba(25, 118, 210, 0.04) !important;
   box-shadow: 0 2px 4px rgba(25, 118, 210, 0.15);
+  transform: translateY(-1px);
+}
+
+.logout-btn:hover {
+  background-color: rgba(244, 67, 54, 0.04) !important;
+  box-shadow: 0 2px 4px rgba(244, 67, 54, 0.15);
   transform: translateY(-1px);
 }
 </style> 

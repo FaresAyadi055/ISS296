@@ -14,7 +14,7 @@
                 <v-btn
                   color="#0ea5e9"
                   class="text-white"
-                  @click="router.push('/signin')"
+                  @click="router.push('/signIn')"
                 >
                   Sign In
                 </v-btn>
@@ -24,7 +24,7 @@
                 <div class="d-flex align-center mb-6">
                   <div class="profile-picture-container mr-4">
                     <v-img 
-                      :src="patient?.photo || 'https://via.placeholder.com/150'" 
+                      :src="patient?.photo" 
                       cover
                       class="profile-picture"
                       width="120"
@@ -287,6 +287,31 @@
     </v-main>
 
     <Footer />
+
+    <!-- Success Dialog -->
+    <v-dialog v-model="showSuccessDialog" max-width="400">
+      <v-card class="success-dialog">
+        <v-card-title class="text-center pa-4" style="background-color: white; color: #1e3a8a;">
+          <v-icon icon="mdi-check-circle" class="mr-2" size="large" color="#0ea5e9"></v-icon>
+          Profile Updated
+        </v-card-title>
+        <v-card-text class="text-center pa-6">
+          <p class="text-h6 mb-2" style="color: #1e3a8a;">Changes Saved Successfully!</p>
+          <p class="text-body-1" style="color: #64748b;">Your profile has been updated with the new information.</p>
+        </v-card-text>
+        <v-card-actions class="justify-center pa-4">
+          <v-btn
+            variant="flat"
+            color="#0ea5e9"
+            class="px-6 continue-btn"
+            style="color: #0ea5e9; background-color: white;"
+            @click="showSuccessDialog = false"
+          >
+            Continue
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-app>
 </template>
 
@@ -296,7 +321,7 @@ import { useRouter, useRoute } from 'vue-router';
 import NavbarAuthPatient from '@/components/navbarAuthPatient.vue';
 import Navbar from '@/components/navbar.vue';
 import Footer from '@/components/footer.vue';
-import patientData from '@/repos/patient.js';
+import api from '@/plugins/axios';
 
 const router = useRouter();
 const route = useRoute();
@@ -311,66 +336,99 @@ const newReminder = ref({
   time: '',
   duration: ''
 });
+const showSuccessDialog = ref(false);
 
 // Function to check if user is logged in
 const isUserLoggedIn = () => {
-  const currentUser = sessionStorage.getItem('currentPatient');
-  if (!currentUser) return false;
-  
-  // Verify the user exists in patient.js
-  const patientId = parseInt(currentUser);
-  return patientData.patients.some(patient => patient.id === patientId);
+  const token = localStorage.getItem('token');
+  const patient = localStorage.getItem('patient');
+  return !!(token && patient);
 };
 
-// Function to check if user has access to this profile
-const hasAccessToProfile = () => {
-  const currentUser = sessionStorage.getItem('currentPatient');
-  if (!currentUser) return false;
-  
-  const currentPatientId = parseInt(currentUser);
-  const requestedPatientId = parseInt(route.params.id);
-  
-  return currentPatientId === requestedPatientId;
-};
+// Function to load patient data from localStorage and API
+const loadPatientData = async () => {
+  try {
+    const storedPatient = localStorage.getItem('patient');
+    if (!storedPatient) {
+      router.push('/signIn');
+      return;
+    }
 
-// Function to load patient data
-const loadPatientData = () => {
-  const patientId = parseInt(route.params.id);
-  const foundPatient = patientData.patients.find(p => p.id === patientId);
-  
-  if (!foundPatient) {
-    router.push('/HomePatient');
-    return;
+    const patientData = JSON.parse(storedPatient);
+    
+    // Use the stored patient data as fallback
+    patient.value = patientData;
+    editedPatient.value = JSON.parse(JSON.stringify(patientData));
+
+    // Initialize health conditions if they don't exist
+    if (!patient.value.healthConditions) {
+      patient.value.healthConditions = {
+        chronic: '',
+        medications: '',
+        allergies: '',
+        reminders: []
+      };
+    }
+    
+    // Replace placeholder image with a reliable default image
+    if (!patient.value.photo || patient.value.photo.includes('via.placeholder.com')) {
+      patient.value.photo = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNTAiIGhlaWdodD0iMTUwIiB2aWV3Qm94PSIwIDAgMTUwIDE1MCI+PHJlY3Qgd2lkdGg9IjE1MCIgaGVpZ2h0PSIxNTAiIGZpbGw9IiNlMmU4ZjAiLz48dGV4dCB4PSI3NSIgeT0iNzUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iNjAiIGZpbGw9IiM5NGE3YjkiPlA8L3RleHQ+PC9zdmc+';
+    }
+
+  } catch (error) {
+    console.error('Error loading patient data:', error);
+    router.push('/signIn');
   }
-  
-  patient.value = foundPatient;
-  editedPatient.value = JSON.parse(JSON.stringify(foundPatient));
 };
 
-// Function to toggle edit mode
-const toggleEdit = () => {
+// Function to toggle edit mode and save changes
+const toggleEdit = async () => {
   if (isEditing.value) {
-    // Save changes
-    Object.assign(patient.value, editedPatient.value);
-    // Here you would typically make an API call to save the changes
-    isEditing.value = false;
+    try {
+      // Get the current patient data
+      const storedPatient = localStorage.getItem('patient');
+      const patientData = JSON.parse(storedPatient);
+
+      // Prepare the updated data
+      const updatedPatient = {
+        ...patientData,
+        ...editedPatient.value,
+        healthConditions: {
+          ...editedPatient.value.healthConditions
+        }
+      };
+
+      // Update localStorage with the new data
+      localStorage.setItem('patient', JSON.stringify(updatedPatient));
+      
+      // Update component state
+      patient.value = updatedPatient;
+      
+      // Reset edit mode
+      isEditing.value = false;
+
+      // Show success dialog instead of alert
+      showSuccessDialog.value = true;
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('Failed to update profile. Please try again.');
+    }
   } else {
-    // Start editing
+    // Start editing - ensure we have all fields
     editedPatient.value = JSON.parse(JSON.stringify(patient.value));
     isEditing.value = true;
   }
 };
 
 // Function to add a new reminder
-const addReminder = () => {
-  if (!patient.value.healthConditions) {
-    patient.value.healthConditions = {};
+const addReminder = async () => {
+  if (!editedPatient.value.healthConditions) {
+    editedPatient.value.healthConditions = {};
   }
-  if (!patient.value.healthConditions.reminders) {
-    patient.value.healthConditions.reminders = [];
+  if (!editedPatient.value.healthConditions.reminders) {
+    editedPatient.value.healthConditions.reminders = [];
   }
   
-  // Create a new reminder object
   const reminder = {
     medication: newReminder.value.medication,
     frequency: newReminder.value.frequency,
@@ -378,39 +436,58 @@ const addReminder = () => {
     duration: newReminder.value.duration
   };
 
-  // Add the reminder to both patient and editedPatient
-  patient.value.healthConditions.reminders.push(reminder);
-  editedPatient.value.healthConditions.reminders.push(reminder);
-
-  // Reset the form
-  newReminder.value = {
-    medication: '',
-    frequency: '',
-    time: '',
-    duration: ''
-  };
-
-  // Close the dialog
-  showAddReminder.value = false;
+  try {
+    // Add reminder to API
+    await api.post(`/patients/${patient.value.id}/reminders`, reminder);
+    
+    // Update local state
+    editedPatient.value.healthConditions.reminders.push(reminder);
+    patient.value = JSON.parse(JSON.stringify(editedPatient.value));
+    
+    // Update localStorage
+    localStorage.setItem('patient', JSON.stringify(patient.value));
+    
+    // Reset form
+    newReminder.value = {
+      medication: '',
+      frequency: '',
+      time: '',
+      duration: ''
+    };
+    
+    showAddReminder.value = false;
+  } catch (error) {
+    console.error('Error adding reminder:', error);
+    // Handle error (you might want to show an error message to the user)
+  }
 };
 
 // Function to remove a reminder
-const removeReminder = (index) => {
-  editedPatient.value.healthConditions.reminders.splice(index, 1);
+const removeReminder = async (index) => {
+  try {
+    const reminderId = editedPatient.value.healthConditions.reminders[index].id;
+    // Remove reminder from API
+    await api.delete(`/patients/${patient.value.id}/reminders/${reminderId}`);
+    
+    // Update local state
+    editedPatient.value.healthConditions.reminders.splice(index, 1);
+    patient.value = JSON.parse(JSON.stringify(editedPatient.value));
+    
+    // Update localStorage
+    localStorage.setItem('patient', JSON.stringify(patient.value));
+  } catch (error) {
+    console.error('Error removing reminder:', error);
+    // Handle error (you might want to show an error message to the user)
+  }
 };
 
-onMounted(() => {
+onMounted(async () => {
   if (!isUserLoggedIn()) {
-    router.push('/signin');
+    router.push('/signIn');
     return;
   }
   
-  if (!hasAccessToProfile()) {
-    router.push('/HomePatient');
-    return;
-  }
-  
-  loadPatientData();
+  await loadPatientData();
 });
 </script>
 
@@ -555,5 +632,50 @@ onMounted(() => {
 .v-text-field .v-field--focused .v-field__outline,
 .v-select .v-field--focused .v-field__outline {
   color: #0ea5e9;
+}
+
+.success-dialog {
+  border-radius: 15px;
+  overflow: hidden;
+  background-color: white !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.success-dialog .v-card-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.success-dialog .v-btn {
+  text-transform: none;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  padding: 0 24px;
+  height: 40px;
+  transition: all 0.3s ease;
+  border: 2px solid #0ea5e9;
+}
+
+.success-dialog .v-btn:hover {
+  background-color: rgba(14, 165, 233, 0.1) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(14, 165, 233, 0.2);
+}
+
+.success-dialog .continue-btn {
+  text-transform: none;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  padding: 0 24px;
+  height: 40px;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.success-dialog .continue-btn:hover {
+  background-color: white !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
 }
 </style> 

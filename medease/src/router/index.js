@@ -41,6 +41,25 @@ const router = createRouter({
       }
     },
     {
+      path: '/patientProfile',
+      name: 'PatientProfileDirect',
+      component: () => import('@/pages/patientProfile.vue'),
+      meta: {
+        requiresAuth: true,
+        role: 'patient'
+      },
+      beforeEnter: (to, from, next) => {
+        const patient = localStorage.getItem('patient');
+        if (patient) {
+          const patientData = JSON.parse(patient);
+          to.params.id = patientData.id;
+          next();
+        } else {
+          next('/signInPatient');
+        }
+      }
+    },
+    {
       path: '/doctor/profile/:id',
       name: 'DoctorProfile',
       component: () => import('@/pages/doctorProfile.vue')
