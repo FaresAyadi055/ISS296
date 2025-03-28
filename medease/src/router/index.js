@@ -32,7 +32,6 @@ const router = createRouter({
       meta: { requiresAuth: true, role: 'doctor' }
     },
     {
-<<<<<<< HEAD
       path: '/profile/:id',
       name: 'PatientProfile',
       component: () => import('@/pages/patientProfile.vue'),
@@ -45,12 +44,6 @@ const router = createRouter({
       path: '/doctor/profile/:id',
       name: 'DoctorProfile',
       component: () => import('@/pages/doctorProfile.vue')
-=======
-      path: '/doctor/patient/:id',
-      name: 'PatientProfile',
-      component: PatientProfile,
-      meta: { requiresAuth: true, role: 'doctor' }
->>>>>>> 4b6637400a6e079daa06d57a36fa4d8958281204
     }
   ]),
 })
