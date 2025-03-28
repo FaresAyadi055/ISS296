@@ -98,7 +98,7 @@
 </template>
 
 <script setup>
-import NavBar from '@/components/navbarpatient.vue'
+import NavBar from '@/components/navbarAuthPatient.vue'
 import Footer from '@/components/footer.vue'
 import doctorIllustration from '@/assets/doctor-illustration.png'
 import heartIcon from '@/assets/heart-icon.png'
