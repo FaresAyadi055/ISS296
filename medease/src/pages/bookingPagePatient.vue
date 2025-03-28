@@ -98,7 +98,13 @@ const isUserLoggedIn = () => {
 
 // Function to handle booking button click - now always goes to booking page since we're in the authenticated flow
 const handleBooking = (doctorId) => {
-  router.push(`/booking/${doctorId}`);
+  // Store the current patient ID in sessionStorage if not already there
+  const currentPatient = localStorage.getItem('patient');
+  if (currentPatient) {
+    const patientData = JSON.parse(currentPatient);
+    sessionStorage.setItem('currentPatient', patientData.id);
+  }
+  router.push(`/BookingPage/${doctorId}`);
 };
 
 const filteredDoctors = computed(() => {

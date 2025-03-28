@@ -22,7 +22,7 @@ const router = createRouter({
     ...routes, // Keep auto-generated routes
     { path: "/", component: Booking },
     {
-      path: "/booking/:doctorId",  // Change this to use doctorId
+      path: "/BookingPage/:doctorId",  // Updated path to match the navigation
       component: BookingPage,  // Component you want to display
     },
     {

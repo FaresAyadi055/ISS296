@@ -128,16 +128,24 @@ const currentUserId = ref('');
 
 // Expand the isUserLoggedIn function to also set the currentUserId
 const isUserLoggedIn = () => {
+  // First check sessionStorage
   const currentUser = sessionStorage.getItem('currentPatient');
-  if (!currentUser) return false;
-  
-  // Verify the user exists in patient.js
-  const patientId = parseInt(currentUser);
-  const exists = patientData.patients.some(patient => patient.id === patientId);
-  if (exists) {
-    currentUserId.value = patientId.toString();
+  if (currentUser) {
+    currentUserId.value = currentUser.toString();
+    return true;
   }
-  return exists;
+
+  // If not in sessionStorage, check localStorage
+  const storedPatient = localStorage.getItem('patient');
+  if (storedPatient) {
+    const patient = JSON.parse(storedPatient);
+    // Store in sessionStorage for future use
+    sessionStorage.setItem('currentPatient', patient.id.toString());
+    currentUserId.value = patient.id.toString();
+    return true;
+  }
+
+  return false;
 };
 
 // Check if a booking was made by the current user
