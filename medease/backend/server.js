@@ -4,6 +4,8 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
+
 
 dotenv.config();
 
@@ -48,7 +50,8 @@ const patientSchema = new mongoose.Schema({
   healthConditions: {
     chronic: String,
     medications: String,
-    allergies: String
+    allergies: String,
+    reminders: { type: Array, default: [] }
   },
   photo: String
 });
@@ -169,7 +172,10 @@ app.post('/api/patients/register', async (req, res) => {
       phone,
       dob,
       gender,
-      healthConditions
+      healthConditions: {
+        ...healthConditions,
+        reminders: []
+      }
     });
 
     await patient.save();
@@ -284,6 +290,7 @@ app.delete('/api/appointments/:id', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
+
 app.get('/api/patients/:id', async (req, res) => {
   try {
     const patient = await Patient.findById(req.params.id);
@@ -295,6 +302,7 @@ app.get('/api/patients/:id', async (req, res) => {
     res.status(500).json({ message: 'Error retrieving patient' });
   }
 });
+
 app.put('/api/patients/update/:id', async (req, res) => {
   try {
     const updatedPatient = await Patient.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -306,6 +314,62 @@ app.put('/api/patients/update/:id', async (req, res) => {
     res.status(500).json({ message: 'Error updating patient' });
   }
 });
+
+// Add this route to handle adding reminders
+app.post('/api/patients/:id/reminders', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { medication, frequency, time, duration } = req.body;
+
+    const patient = await Patient.findById(id);
+    if (!patient) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+
+    const newReminder = {
+      _id: uuidv4(),
+      medication,
+      frequency,
+      time,
+      duration
+    };
+
+    patient.healthConditions.reminders.push(newReminder);
+    await patient.save();
+
+    console.log('Added Reminder:', newReminder);
+
+    res.status(201).json(patient);
+  } catch (error) {
+    console.error('Error adding reminder:', error);
+    res.status(500).json({ message: 'Error adding reminder' });
+  }
+});
+
+// Add this route to handle deleting reminders
+app.delete('/api/patients/:id/reminders/:reminderId', async (req, res) => {
+  try {
+    const { id, reminderId } = req.params;
+
+    // Find the patient by ID
+    const patient = await Patient.findById(id);
+    if (!patient) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+
+    // Remove the reminder from the patient's health conditions
+    patient.healthConditions.reminders = patient.healthConditions.reminders.filter(reminder => reminder._id.toString() !== reminderId);
+
+    // Save the updated patient
+    await patient.save();
+
+    res.status(200).json({ message: 'Reminder deleted successfully' }); // Return a success message
+  } catch (error) {
+    console.error('Error deleting reminder:', error);
+    res.status(500).json({ message: 'Error deleting reminder' });
+  }
+});
+
 const fetchPatient = async () => {
   try {
     const response = await api.get(`/patients/${patientId}`);
@@ -315,9 +379,6 @@ const fetchPatient = async () => {
     console.error("Error fetching patient:", error);
   }
 };
-
-
-
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {

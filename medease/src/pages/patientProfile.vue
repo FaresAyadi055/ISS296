@@ -371,21 +371,28 @@ const loadPatientData = async () => {
     // Fetch latest patient data from the API
     const response = await api.get(`/patients/${patientData.id}`);
     if (response?.data) {
+      // Make sure health conditions and reminders are properly initialized
+      if (!response.data.healthConditions) {
+        response.data.healthConditions = {
+          chronic: '',
+          medications: '',
+          allergies: '',
+          reminders: []
+        };
+      } else if (!response.data.healthConditions.reminders) {
+        response.data.healthConditions.reminders = [];
+      }
+      
       patient.value = response.data; // Update patient data
       localStorage.setItem('patient', JSON.stringify(response.data)); // Update local storage
 
       // Print all patient data
       console.log('Fetched Patient Data:', response.data);
+      console.log('Reminders:', response.data.healthConditions.reminders);
     }
 
-    // Initialize editedPatient and healthConditions
+    // Initialize editedPatient
     editedPatient.value = JSON.parse(JSON.stringify(patient.value));
-    patient.value.healthConditions = patient.value.healthConditions ?? {
-      chronic: '',
-      medications: '',
-      allergies: '',
-      reminders: [],
-    };
   } catch (error) {
     console.error('Error loading patient data:', error);
     router.push('/signIn');
@@ -434,13 +441,6 @@ const toggleEdit = async () => {
 
 // Function to add a new reminder
 const addReminder = async () => {
-  if (!editedPatient.value.healthConditions) {
-    editedPatient.value.healthConditions = {};
-  }
-  if (!editedPatient.value.healthConditions.reminders) {
-    editedPatient.value.healthConditions.reminders = [];
-  }
-  
   const reminder = {
     medication: newReminder.value.medication,
     frequency: newReminder.value.frequency,
@@ -449,12 +449,18 @@ const addReminder = async () => {
   };
 
   try {
-    // Add reminder to API
-    await api.post(`/patients/${patient.value.id}/reminders`, reminder);
+    // Ensure the correct patient ID is used
+    const response = await api.post(`/patients/${patient.value._id}/reminders`, reminder);
     
-    // Update local state
-    editedPatient.value.healthConditions.reminders.push(reminder);
-    patient.value = JSON.parse(JSON.stringify(editedPatient.value));
+    // Get the updated patient data with the new reminder (including the _id from server)
+    console.log('Server Response After Adding Reminder:', response.data);
+    
+    // Update local state with the complete response data from server
+    patient.value = response.data;
+    editedPatient.value = JSON.parse(JSON.stringify(response.data));
+    
+    // Log the updated reminders to verify they have _ids
+    console.log('Updated Reminders:', patient.value.healthConditions.reminders);
     
     // Update localStorage
     localStorage.setItem('patient', JSON.stringify(patient.value));
@@ -467,29 +473,53 @@ const addReminder = async () => {
       duration: ''
     };
     
-    showAddReminder.value = false;
+    showAddReminder.value = false; // Close the dialog
   } catch (error) {
     console.error('Error adding reminder:', error);
-    // Handle error (you might want to show an error message to the user)
+    alert('Failed to add reminder. Please try again.'); // Optional: Show an alert for errors
   }
 };
 
 // Function to remove a reminder
 const removeReminder = async (index) => {
   try {
-    const reminderId = editedPatient.value.healthConditions.reminders[index].id;
-    // Remove reminder from API
-    await api.delete(`/patients/${patient.value.id}/reminders/${reminderId}`);
+    // Verify the reminder at this index
+    console.log('Reminder to remove:', editedPatient.value.healthConditions.reminders[index]);
     
+    const reminderId = editedPatient.value.healthConditions.reminders[index]._id;
+    console.log('Attempting to remove reminder with ID:', reminderId);
+
+    if (!reminderId) {
+      console.error('Reminder ID is undefined, attempting to remove using index instead');
+      
+      // Remove reminder locally based on index
+      editedPatient.value.healthConditions.reminders.splice(index, 1);
+      patient.value = JSON.parse(JSON.stringify(editedPatient.value));
+      
+      // Update patient data on server
+      await api.put(`/patients/update/${patient.value._id}`, patient.value);
+      
+      // Update localStorage
+      localStorage.setItem('patient', JSON.stringify(patient.value));
+      
+      console.log('Reminder removed by index');
+      return;
+    }
+
+    // If we have an ID, use the API endpoint for removing a specific reminder
+    await api.delete(`/patients/${patient.value._id}/reminders/${reminderId}`);
+
     // Update local state
     editedPatient.value.healthConditions.reminders.splice(index, 1);
     patient.value = JSON.parse(JSON.stringify(editedPatient.value));
-    
+
     // Update localStorage
     localStorage.setItem('patient', JSON.stringify(patient.value));
+
+    console.log('Reminder removed successfully');
   } catch (error) {
     console.error('Error removing reminder:', error);
-    // Handle error (you might want to show an error message to the user)
+    alert('Failed to remove reminder. Please try again.');
   }
 };
 
