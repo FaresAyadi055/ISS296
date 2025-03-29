@@ -151,7 +151,7 @@ app.post('/api/doctors/login', async (req, res) => {
 // Patient Authentication Routes
 app.post('/api/patients/register', async (req, res) => {
   try {
-    const { firstName, lastName, email, password, address, phone, dob, gender, healthConditions } = req.body;
+    const { firstName, lastName, email, password, address, phone, dob, gender, healthConditions, photo } = req.body;
     
     // Check if patient already exists
     const existingPatient = await Patient.findOne({ email });
@@ -172,6 +172,7 @@ app.post('/api/patients/register', async (req, res) => {
       phone,
       dob,
       gender,
+      photo,
       healthConditions: {
         ...healthConditions,
         reminders: []
@@ -219,6 +220,7 @@ app.post('/api/patients/login', async (req, res) => {
         address: patient.address,
         phone: patient.phone,
         gender: patient.gender,
+        photo: patient.photo,
         healthConditions: patient.healthConditions
       }
     });

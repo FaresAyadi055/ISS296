@@ -108,12 +108,36 @@
               hint="List allergies"
             ></v-textarea>
   
-            <v-file-input 
-              v-model="photo" 
-              label="Upload your photo (optional)" 
-              accept="image/*"
-              outlined
-            ></v-file-input>
+            <!-- Replace the divider, heading, and file input with this simplified version -->
+            <div class="mb-4">
+              <v-text-field
+                readonly
+                label="Upload Photo"
+                variant="underlined"
+                class="photo-upload-field"
+                :value="photo && photo.length > 0 ? photo[0].name : ''"
+                @click="$refs.photoInput.click()"
+              >
+                <template v-slot:prepend>
+                  <v-icon icon="mdi-paperclip" class="mr-2"></v-icon>
+                </template>
+              </v-text-field>
+              
+              <input
+                ref="photoInput"
+                type="file"
+                accept="image/*"
+                style="display: none"
+                @change="handleFileUpload"
+              />
+            </div>
+  
+            <!-- Keep the preview section as is, but make it conditional on imagePreview -->
+            <div v-if="imagePreview" class="text-center mb-4">
+              <v-avatar size="120" class="mb-3 preview-image">
+                <v-img :src="imagePreview" cover alt="Profile preview"></v-img>
+              </v-avatar>
+            </div>
   
             <v-btn type="submit" color="primary" block class="register-button">Register</v-btn>
   
@@ -171,6 +195,9 @@
       const isOnMedications = ref(false);
       const hasAllergies = ref(false);
       const photo = ref(null);
+      const photoInput = ref(null);
+      const defaultPhoto = ref('https://via.placeholder.com/150');
+      const imagePreview = ref(null);
       const router = useRouter();
       const errorDialog = ref(false);
       const successDialog = ref(false);
@@ -187,6 +214,20 @@
         successDialog.value = true;
       };
   
+      const convertFileToBase64 = (file) => {
+        return new Promise((resolve, reject) => {
+          if (!file) {
+            resolve(null);
+            return;
+          }
+          
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = error => reject(error);
+        });
+      };
+  
       const handleLogin = async () => {
         try {
           const response = await axios.post('http://localhost:3001/api/patients/login', {
@@ -198,13 +239,14 @@
   
           const { token, patient } = response.data;
   
-          // Store token and patient info
+          // Store token and patient info with photo if available
           localStorage.setItem('token', token);
           localStorage.setItem('patient', JSON.stringify({
-            id: patient._id, // Ensure the patient ID is stored
+            id: patient._id,
             firstName: patient.firstName,
             lastName: patient.lastName,
             email: patient.email,
+            photo: patient.photo || defaultPhoto.value,
             // Add any other patient data you need
           }));
   
@@ -231,13 +273,26 @@
   
       const handleRegister = async () => {
         try {
+          // Validate name format
+          if (!fullName.value.includes(' ')) {
+            showError('Please enter both first name and last name separated by a space.');
+            return;
+          }
+          
           const [firstName, lastName] = fullName.value.split(' ');
+          
+          // Convert the selected photo to base64 string
+          let photoBase64 = null;
+          if (photo.value && photo.value.length > 0) {
+            photoBase64 = await convertFileToBase64(photo.value[0]);
+          }
           
           const response = await axios.post('http://localhost:3001/api/patients/register', {
             firstName,
             lastName,
             email: regEmail.value,
             password: regPassword.value,
+            photo: photoBase64 || defaultPhoto.value,
             healthConditions: {
               chronic: hasHealthConditions.value ? healthConditions.value.chronic : '',
               medications: isOnMedications.value ? healthConditions.value.medications : '',
@@ -247,11 +302,39 @@
   
           if (response.status === 201) {
             showSuccess('Registration successful! Please login.');
+            
+            // Reset form fields
+            fullName.value = '';
+            regEmail.value = '';
+            regPassword.value = '';
+            hasHealthConditions.value = false;
+            isOnMedications.value = false;
+            hasAllergies.value = false;
+            healthConditions.value = { chronic: '', medications: '', allergies: '' };
+            photo.value = null;
+            imagePreview.value = null;
+            
+            // Switch to login screen
             showRegister.value = false;
           }
         } catch (error) {
           console.error('Registration error:', error);
           showError(error.response?.data?.message || 'Registration failed. Please try again.');
+        }
+      };
+  
+      const handleFileUpload = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          // Set the photo ref to an array containing the file (to match previous v-file-input behavior)
+          photo.value = [file];
+          
+          // Create preview image
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            imagePreview.value = e.target.result;
+          };
+          reader.readAsDataURL(file);
         }
       };
   
@@ -267,6 +350,7 @@
         isOnMedications,
         hasAllergies,
         photo,
+        photoInput,
         handleLogin,
         handleRegister,
         errorDialog,
@@ -274,7 +358,9 @@
         errorMessage,
         successMessage,
         showError,
-        showSuccess
+        showSuccess,
+        imagePreview,
+        handleFileUpload
       };
     }
   };
@@ -307,6 +393,65 @@
 
   .text-blue {
     color: #1976D2 !important;
+  }
+
+  /* Custom styling for file input to make it look more like a text field */
+  .v-file-input :deep(.v-field__input) {
+    padding: 8px 12px;
+    min-height: 40px;
+  }
+
+  .v-file-input :deep(.v-field__field) {
+    border-radius: 4px;
+  }
+
+  .v-file-input :deep(.v-field__append-inner) {
+    padding-top: 12px;
+  }
+
+  .v-file-input :deep(.v-field__prepend-inner) {
+    padding-top: 12px;
+    margin-right: 8px;
+  }
+
+  /* Style the selected file chip to look more integrated */
+  .v-file-input :deep(.v-chip) {
+    margin: 4px;
+    height: 28px;
+    font-size: 14px;
+  }
+
+  /* Make the preview image display nicer */
+  .preview-image {
+    border: 2px solid #0ea5e9;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Add these styles to the style section */
+  .photo-upload-field {
+    border-bottom: 1px solid #ddd;
+    cursor: pointer;
+  }
+
+  .photo-upload-field :deep(.v-field__overlay) {
+    display: none;
+  }
+
+  .photo-upload-field :deep(.v-field__field) {
+    box-shadow: none !important;
+  }
+
+  .photo-upload-field :deep(.v-field__input) {
+    padding: 8px 0;
+    min-height: 36px;
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  .photo-upload-field:hover {
+    border-bottom-color: #666;
   }
   </style>
   
