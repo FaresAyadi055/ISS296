@@ -87,6 +87,7 @@
           </v-card>
         </v-dialog>
       </v-container>
+      <Footer />
     </v-main>
   </v-app>
 </template>
@@ -99,7 +100,7 @@ import api from '@/plugins/axios';
 import patientData from '@/repos/patient.js';
 import NavbarAuthPatient from '@/components/navbarAuthPatient.vue';
 import Navbar from '@/components/navbar.vue';
-
+import Footer from '@/components/footer.vue';
 const route = useRoute();
 const doctorId = parseInt(route.params.doctorId, 10); // Get the doctor ID from route params
 

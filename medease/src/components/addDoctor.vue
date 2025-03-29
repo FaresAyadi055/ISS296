@@ -31,18 +31,23 @@
 
           <!-- Working Hours (Schedule) -->
           <v-container>
-            <v-row v-for="(hour, index) in workingHours" :key="index" align="center">
-              <v-col>
-                <v-text-field v-model="hour.startTime" label="Start Time" type="time" required></v-text-field>
-              </v-col>
-              <v-col>
-                <v-text-field v-model="hour.endTime" label="End Time" type="time" required></v-text-field>
-              </v-col>
-              <v-col>
-                <v-btn @click="removeHour(index)" color="red">Remove</v-btn>
-              </v-col>
-            </v-row>
-            <v-btn @click="addHour" color="green">Add Working Hour</v-btn>
+            <div v-for="day in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']" :key="day" class="mb-4">
+              <h3 class="text-capitalize mb-2">{{ day }}</h3>
+              <div v-if="workingHours[day].length === 0">
+                <v-btn @click="addHour(day)" color="green" class="mb-4">Add Working Hour for {{ day }}</v-btn>
+              </div>
+              <v-row v-else v-for="(hour, index) in workingHours[day]" :key="index" align="center">
+                <v-col>
+                  <v-text-field v-model="hour.startTime" label="Start Time" type="time" required></v-text-field>
+                </v-col>
+                <v-col>
+                  <v-text-field v-model="hour.endTime" label="End Time" type="time" required></v-text-field>
+                </v-col>
+                <v-col>
+                  <v-btn @click="removeHour(day, index)" color="red">Remove</v-btn>
+                </v-col>
+              </v-row>
+            </div>
           </v-container>
 
           <!-- Photo Upload -->
@@ -103,7 +108,17 @@ const errorDialog = ref(false);
 const successDialog = ref(false);
 const errorMessage = ref("");
 const successMessage = ref("");
-const workingHours = ref([]);
+
+// Initialize working hours for all days
+const workingHours = ref({
+  monday: [],
+  tuesday: [],
+  wednesday: [],
+  thursday: [],
+  friday: [],
+  saturday: [],
+  sunday: []
+});
 
 // Specialty options
 const specialtyOptions = ref([
@@ -117,12 +132,14 @@ const specialtyOptions = ref([
   "Psychiatrist"
 ]);
 
-const addHour = () => {
-  workingHours.value.push({ startTime: "", endTime: "" });
+const addHour = (day) => {
+  if (workingHours.value[day].length === 0) {
+    workingHours.value[day].push({ startTime: "", endTime: "" });
+  }
 };
 
-const removeHour = (index) => {
-  workingHours.value.splice(index, 1);
+const removeHour = (day, index) => {
+  workingHours.value[day].splice(index, 1);
 };
 
 const showError = (message) => {
@@ -144,10 +161,10 @@ const handleRequest = async () => {
       return;
     }
 
-    // Ensure that working hours are valid
-    const validWorkingHours = workingHours.value.filter(hour => hour.startTime && hour.endTime);
-    if (validWorkingHours.length === 0) {
-      showError("Please add valid working hours.");
+    // Check if at least one working hour is set for each day
+    const hasWorkingHours = Object.values(workingHours.value).some(day => day.length > 0);
+    if (!hasWorkingHours) {
+      showError("Please add at least one working hour for each day.");
       return;
     }
 
@@ -160,7 +177,7 @@ const handleRequest = async () => {
     formData.append("specialty", specialty.value);
     formData.append("phoneNumber", phoneNumber.value);
     formData.append("description", description.value);
-    formData.append("workingHours", JSON.stringify(validWorkingHours));
+    formData.append("workingHours", JSON.stringify(workingHours.value));
 
     if (photo.value) {
       formData.append("photo", photo.value);

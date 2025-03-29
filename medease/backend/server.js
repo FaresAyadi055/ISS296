@@ -4,6 +4,8 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 
 
@@ -14,6 +16,18 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    cb(null, uuidv4() + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/medease')
@@ -30,11 +44,15 @@ const doctorSchema = new mongoose.Schema({
   specialty: { type: String, required: true },
   phoneNumber: { type: String, required: true },
   photo: { type: String },
-  location: { type: String, required: true },
-  schedule: {
-    type: Map,
-    of: [String],
-    default: new Map()
+  description: { type: String, required: true },
+  workingHours: {
+    monday: [{ startTime: String, endTime: String }],
+    tuesday: [{ startTime: String, endTime: String }],
+    wednesday: [{ startTime: String, endTime: String }],
+    thursday: [{ startTime: String, endTime: String }],
+    friday: [{ startTime: String, endTime: String }],
+    saturday: [{ startTime: String, endTime: String }],
+    sunday: [{ startTime: String, endTime: String }]
   }
 });
 
@@ -78,9 +96,9 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Doctor Authentication Routes
-app.post('/api/doctors/register', async (req, res) => {
+app.post('/api/doctors/register', upload.single('photo'), async (req, res) => {
   try {
-    const { firstName, lastName, email, password, address, specialty, phoneNumber, location } = req.body;
+    const { firstName, lastName, email, password, address, specialty, phoneNumber, description, workingHours } = req.body;
     
     // Check if doctor already exists
     const existingDoctor = await Doctor.findOne({ email });
@@ -91,6 +109,9 @@ app.post('/api/doctors/register', async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Parse working hours
+    const parsedWorkingHours = JSON.parse(workingHours);
+
     // Create new doctor
     const doctor = new Doctor({
       firstName,
@@ -100,12 +121,15 @@ app.post('/api/doctors/register', async (req, res) => {
       address,
       specialty,
       phoneNumber,
-      location
+      description,
+      workingHours: parsedWorkingHours,
+      photo: req.file ? req.file.path : null
     });
 
     await doctor.save();
     res.status(201).json({ message: 'Doctor registered successfully' });
   } catch (error) {
+    console.error('Registration error:', error);
     res.status(400).json({ message: error.message });
   }
 });
