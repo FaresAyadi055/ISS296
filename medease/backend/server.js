@@ -14,7 +14,12 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 // Configure multer for file uploads
@@ -53,7 +58,8 @@ const doctorSchema = new mongoose.Schema({
     friday: [{ startTime: String, endTime: String }],
     saturday: [{ startTime: String, endTime: String }],
     sunday: [{ startTime: String, endTime: String }]
-  }
+  },
+  rating: { type: String, required: true }
 });
 
 const patientSchema = new mongoose.Schema({
@@ -123,7 +129,8 @@ app.post('/api/doctors/register', upload.single('photo'), async (req, res) => {
       phoneNumber,
       description,
       workingHours: parsedWorkingHours,
-      photo: req.file ? req.file.path : null
+      photo: req.file ? req.file.path : null,
+      rating: (Math.random() * (4.9 - 3.5) + 3.5).toFixed(1)
     });
 
     await doctor.save();
@@ -255,7 +262,7 @@ app.post('/api/patients/login', async (req, res) => {
 
 // Appointment Schema
 const appointmentSchema = new mongoose.Schema({
-  doctorId: { type: Number, required: true },
+  doctorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor', required: true },
   day: { type: String, required: true },
   time: { type: String, required: true },
   patientId: { type: String, required: true },
@@ -268,7 +275,7 @@ const Appointment = mongoose.model('Appointment', appointmentSchema);
 app.get('/api/appointments/:doctorId', async (req, res) => {
   try {
     console.log('Fetching appointments for doctor:', req.params.doctorId);
-    const appointments = await Appointment.find({ doctorId: parseInt(req.params.doctorId, 10) });
+    const appointments = await Appointment.find({ doctorId: req.params.doctorId });
     console.log('Found appointments:', appointments);
     res.json(appointments || []); // Return empty array if no appointments found
   } catch (error) {
@@ -405,6 +412,33 @@ const fetchPatient = async () => {
     console.error("Error fetching patient:", error);
   }
 };
+
+// Add this route to fetch all doctors
+app.get('/api/doctors', async (req, res) => {
+  try {
+    const doctors = await Doctor.find();
+    console.log('Fetched doctors from database:', doctors.length);
+    console.log('Sample doctor data:', doctors.length > 0 ? doctors[0] : 'No doctors found');
+    res.json(doctors);
+  } catch (error) {
+    console.error('Error fetching doctors:', error);
+    res.status(500).json({ message: 'Error fetching doctors' });
+  }
+});
+
+// Add this route to fetch a single doctor by ID
+app.get('/api/doctors/:id', async (req, res) => {
+  try {
+    const doctor = await Doctor.findById(req.params.id);
+    if (!doctor) {
+      return res.status(404).json({ message: 'Doctor not found' });
+    }
+    res.json(doctor);
+  } catch (error) {
+    console.error('Error fetching doctor:', error);
+    res.status(500).json({ message: 'Error fetching doctor' });
+  }
+});
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
