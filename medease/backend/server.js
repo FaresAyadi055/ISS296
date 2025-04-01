@@ -403,51 +403,6 @@ app.delete('/api/patients/:id/reminders/:reminderId', async (req, res) => {
   }
 });
 
-const fetchPatient = async () => {
-  try {
-    const response = await api.get(`/patients/${patientId}`);
-    patient.value = response.data;
-    console.log("Fetched Patient Data:", patient.value);
-  } catch (error) {
-    console.error("Error fetching patient:", error);
-  }
-};
-onMounted(async () => {
-  try {
-    const { data: patientsData } = await axios.get('/api/patients');
-    patients.value = patientsData.map(patient => ({
-      id: patient.id,
-      fullName: `${patient.firstName} ${patient.lastName}`
-    }));
-
-    const { data: appointmentsData } = await axios.get('/api/appointments');
-    appointments.value = appointmentsData.reduce((acc, appointment) => {
-      if (!acc[appointment.day]) acc[appointment.day] = {};
-      acc[appointment.day][appointment.time] = { patientName: appointment.patientName };
-      return acc;
-    }, {});
-  } catch (error) {
-    console.error('Error fetching data:', error);
-  }
-});
-const confirmAppointment = async () => {
-  if (!selectedPatient.value) return;
-
-  try {
-    const { data: newAppointment } = await axios.post('/api/appointments', {
-      patientId: selectedPatient.value,
-      time: selectedSlot.value,
-      day: selectedDay.value
-    });
-
-    if (!appointments.value[selectedDay.value]) appointments.value[selectedDay.value] = {};
-    appointments.value[selectedDay.value][selectedSlot.value] = { patientName: newAppointment.patientName };
-
-    showModal.value = false;
-  } catch (error) {
-    console.error('Error booking appointment:', error);
-  }
-};
 
 // Add this route to fetch all doctors
 app.get('/api/doctors', async (req, res) => {

@@ -18,6 +18,7 @@
       </template>
     </div>
 
+    <!-- Modal to select patient -->
     <v-dialog v-model="showModal" max-width="400">
       <v-card>
         <v-card-title>Select Patient</v-card-title>
@@ -32,7 +33,7 @@
         </v-card-text>
         <v-card-actions>
           <v-btn color="primary" @click="confirmAppointment">Confirm</v-btn>
-          <v-btn color="error" @click="showModal = false">Cancel</v-btn>
+          <v-btn color="error" @click="cancelModal">Cancel</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -52,6 +53,7 @@ const selectedPatient = ref(null);
 const selectedSlot = ref(null);
 const selectedDay = ref(null);
 
+// Fetch patients and appointments on component mount
 onMounted(async () => {
   try {
     const { data } = await axios.get('/api/patients');
@@ -59,37 +61,54 @@ onMounted(async () => {
       id: patient.id,
       fullName: `${patient.firstName} ${patient.lastName}`
     }));
-    
-    const appointmentsRes = await axios.get('/api/appointments');
-    appointments.value = appointmentsRes.data;
+
+    await fetchAppointments(); // Load appointments
   } catch (error) {
     console.error('Error fetching data:', error);
   }
 });
 
-const selectPatient = (time, day) => {
-  selectedSlot.value = time;
-  selectedDay.value = day;
-  showModal.value = true;
+// Fetch updated appointments from the backend
+const fetchAppointments = async () => {
+  try {
+    const appointmentsRes = await axios.get('/api/appointments');
+    appointments.value = appointmentsRes.data; // 🔄 Refresh the schedule
+  } catch (error) {
+    console.error('Error fetching updated appointments:', error);
+  }
 };
 
+// Select patient for the appointment
+const selectPatient = (time, day) => {
+  console.log("Patient selection initiated for:", time, day); // Debugging
+  selectedSlot.value = time;
+  selectedDay.value = day;
+  showModal.value = true; // Ensure the modal is shown
+};
+
+// Confirm the appointment and refresh the schedule
 const confirmAppointment = async () => {
   if (!selectedPatient.value) return;
-  
+
   try {
     await axios.post('/api/appointments', {
       patientId: selectedPatient.value,
       time: selectedSlot.value,
       day: selectedDay.value
     });
-    
-    const patient = patients.value.find(p => p.id === selectedPatient.value);
-    if (!appointments.value[selectedDay.value]) appointments.value[selectedDay.value] = {};
-    appointments.value[selectedDay.value][selectedSlot.value] = { patientName: patient.fullName };
-    showModal.value = false;
+
+    await fetchAppointments(); // 🔄 Refresh schedule after booking
+
+    showModal.value = false; // Close modal after confirming the appointment
   } catch (error) {
     console.error('Error booking appointment:', error);
   }
+};
+
+// Cancel modal action
+const cancelModal = () => {
+  console.log("Canceling modal..."); // Debugging cancel action
+  showModal.value = false;
 };
 </script>
 
