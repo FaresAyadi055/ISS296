@@ -12,52 +12,83 @@
             <span v-if="appointments[day] && appointments[day][slot]">
               {{ appointments[day][slot].patientName }}
             </span>
-            <button v-else @click.stop="addAppointment(slot, day)">+</button>
+            <button v-else @click.stop="selectPatient(slot, day)">+</button>
           </div>
         </template>
       </template>
     </div>
 
-    <div v-if="selectedAppointment" class="modal">
-      <div class="modal-content">
-        <h3>Appointment Details</h3>
-        <p><strong>Patient:</strong> {{ selectedAppointment.patientName }}</p>
-        <p v-if="selectedAppointment.details"><strong>Details:</strong> {{ selectedAppointment.details }}</p>
-        <p><strong>Time:</strong> {{ selectedAppointment.time }}</p>
-        <p><strong>Day:</strong> {{ selectedAppointment.day }}</p>
-        <button @click="selectedAppointment = null">Close</button>
-      </div>
-    </div>
+    <v-dialog v-model="showModal" max-width="400">
+      <v-card>
+        <v-card-title>Select Patient</v-card-title>
+        <v-card-text>
+          <v-select
+            v-model="selectedPatient"
+            :items="patients"
+            item-title="fullName"
+            item-value="id"
+            label="Select a patient"
+          ></v-select>
+        </v-card-text>
+        <v-card-actions>
+          <v-btn color="primary" @click="confirmAppointment">Confirm</v-btn>
+          <v-btn color="error" @click="showModal = false">Cancel</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import patientsData from "@/repos/patient.json";
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
 
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const timeSlots = Array.from({ length: 16 }, (_, i) => `${8 + Math.floor(i / 2)}:${i % 2 === 0 ? '00' : '30'}`);
 const appointments = ref({});
-const selectedAppointment = ref(null);
-const patients = patientsData.patients;
+const patients = ref([]);
+const showModal = ref(false);
+const selectedPatient = ref(null);
+const selectedSlot = ref(null);
+const selectedDay = ref(null);
 
-const openAppointment = (time, day) => {
-  if (appointments.value[day] && appointments.value[day][time]) {
-    selectedAppointment.value = { ...appointments.value[day][time], time, day };
+onMounted(async () => {
+  try {
+    const { data } = await axios.get('/api/patients');
+    patients.value = data.map(patient => ({
+      id: patient.id,
+      fullName: `${patient.firstName} ${patient.lastName}`
+    }));
+    
+    const appointmentsRes = await axios.get('/api/appointments');
+    appointments.value = appointmentsRes.data;
+  } catch (error) {
+    console.error('Error fetching data:', error);
   }
+});
+
+const selectPatient = (time, day) => {
+  selectedSlot.value = time;
+  selectedDay.value = day;
+  showModal.value = true;
 };
 
-const addAppointment = (time, day) => {
-  const patientName = prompt("Enter Patient Name (First and Last):");
-  if (patientName) {
-    if (!appointments.value[day]) appointments.value[day] = {};
-    const patientDetails = patients.find(p => `${p.firstName} ${p.lastName}`.toLowerCase() === patientName.toLowerCase());
-    appointments.value[day][time] = {
-      patientName,
-      details: patientDetails 
-        ? `Chronic: ${patientDetails.healthConditions.chronic || "None"}, Medications: ${patientDetails.healthConditions.medications || "None"}, Allergies: ${patientDetails.healthConditions.allergies || "None"}`
-        : "No additional details available"
-    };
+const confirmAppointment = async () => {
+  if (!selectedPatient.value) return;
+  
+  try {
+    await axios.post('/api/appointments', {
+      patientId: selectedPatient.value,
+      time: selectedSlot.value,
+      day: selectedDay.value
+    });
+    
+    const patient = patients.value.find(p => p.id === selectedPatient.value);
+    if (!appointments.value[selectedDay.value]) appointments.value[selectedDay.value] = {};
+    appointments.value[selectedDay.value][selectedSlot.value] = { patientName: patient.fullName };
+    showModal.value = false;
+  } catch (error) {
+    console.error('Error booking appointment:', error);
   }
 };
 </script>
@@ -109,18 +140,5 @@ button {
 button:hover {
   background: #007bff;
   color: white;
-}
-.modal {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: white;
-  padding: 20px;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
-  color: black;
-}
-.modal-content {
-  text-align: center;
 }
 </style>
