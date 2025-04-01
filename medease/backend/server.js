@@ -403,6 +403,7 @@ app.delete('/api/patients/:id/reminders/:reminderId', async (req, res) => {
   }
 });
 
+
 // Add this route to fetch all doctors
 app.get('/api/doctors', async (req, res) => {
   try {
