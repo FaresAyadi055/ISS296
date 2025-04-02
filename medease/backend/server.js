@@ -431,6 +431,32 @@ app.get('/api/doctors/:id', async (req, res) => {
   }
 });
 
+// Add this route to update a doctor's information
+app.put('/api/doctors/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    // Remove password from updates if it exists
+    delete updates.password;
+
+    const doctor = await Doctor.findByIdAndUpdate(
+      id,
+      { $set: updates },
+      { new: true, runValidators: true }
+    );
+
+    if (!doctor) {
+      return res.status(404).json({ message: 'Doctor not found' });
+    }
+
+    res.json(doctor);
+  } catch (error) {
+    console.error('Error updating doctor:', error);
+    res.status(400).json({ message: error.message });
+  }
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
