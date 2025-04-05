@@ -4,7 +4,7 @@
     
     <template v-if="isAuthenticated">
       <v-btn class="mx-2" rounded style="background-color: #579AFE; color: #FFFFFF;" to="/HomeDoctor">Home</v-btn>
-      <v-btn class="mx-2" rounded style="background-color: #579AFE; color: #FFFFFF;" to="doctorSchedule">Schedule</v-btn>
+      <v-btn class="mx-2" rounded style="background-color: #579AFE; color: #FFFFFF;" to="/doctorSchedule">Schedule</v-btn>
       <v-btn class="mx-2" rounded style="background-color: #579AFE; color: #FFFFFF;" to="/doctor/prescription">E-Prescription</v-btn>
       
       <v-spacer></v-spacer>
