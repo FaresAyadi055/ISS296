@@ -46,22 +46,22 @@
               <td>
                 <div v-if="times.length === 0" class="text-caption text-grey">No available slots</div>
                 <v-chip 
-                  v-for="(time, i) in times" 
+                  v-for="(timeSlot, i) in times" 
                   :key="i" 
                   class="ma-1" 
-                  :color="isBooked(day, time) ? (isUserBooking(day, time) ? 'orange' : 'grey') : 'primary'" 
+                  :color="isBooked(day, timeSlot.time) ? (isUserBooking(day, timeSlot.time) ? 'orange' : 'grey') : 'primary'" 
                   text-color="white"
-                  @click="openDialog(day, time)"
-                  :disabled="isBooked(day, time) && !isUserBooking(day, time)"
+                  @click="openDialog(day, timeSlot.time)"
+                  :disabled="isBooked(day, timeSlot.time) && !isUserBooking(day, timeSlot.time)"
                 >
-                  <template v-if="isUserBooking(day, time)">
-                    {{ time }} (Your booking)
+                  <template v-if="isUserBooking(day, timeSlot.time)">
+                    {{ timeSlot.time }} (Your booking)
                   </template>
-                  <template v-else-if="isBooked(day, time)">
-                    {{ time }} (Booked)
+                  <template v-else-if="isBooked(day, timeSlot.time)">
+                    {{ timeSlot.time }} (Booked)
                   </template>
                   <template v-else>
-                    {{ time }}
+                    {{ timeSlot.time }}
                   </template>
                 </v-chip>
               </td>
@@ -127,7 +127,12 @@ const doctorData = ref({
 const schedule = ref({});
 const loading = ref(true);
 const formattedWeek = computed(() => {
-  return currentWeek.value.toISOString().split("T")[0];
+  const startOfWeek = new Date(currentWeek.value);
+  const endOfWeek = new Date(currentWeek.value);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+  const formatDate = (date) => date.toISOString().split("T")[0];
+  return `${formatDate(startOfWeek)} - ${formatDate(endOfWeek)}`;
 });
 
 const currentWeek = ref(new Date());
@@ -218,32 +223,33 @@ async function fetchDoctorData() {
   try {
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
     const response = await axios.get(`${apiUrl}/api/doctors/${doctorId.value}`);
-    
+
     if (response.data) {
       doctorData.value = response.data;
-      
-      // Generate schedule from working hours
+
       const generatedSchedule = {};
-      
-      days.forEach(day => {
+      const startOfWeek = new Date(currentWeek.value);
+
+      days.forEach((day, index) => {
+        const currentDate = new Date(startOfWeek);
+        currentDate.setDate(startOfWeek.getDate() + index);
+        const formattedDate = currentDate.toISOString().split("T")[0];
+
         generatedSchedule[capitalize(day)] = [];
-        
-        // Check if doctor has working hours for this day
+
         if (doctorData.value.workingHours && doctorData.value.workingHours[day] && doctorData.value.workingHours[day].length > 0) {
-          // For each time slot in the working hours
-          doctorData.value.workingHours[day].forEach(slot => {
+          doctorData.value.workingHours[day].forEach((slot) => {
             if (slot.startTime && slot.endTime) {
-              // Generate 30 min intervals
               const timeSlots = generateTimeSlots(slot.startTime, slot.endTime);
-              generatedSchedule[capitalize(day)] = [...generatedSchedule[capitalize(day)], ...timeSlots];
+              timeSlots.forEach((time) => {
+                generatedSchedule[capitalize(day)].push({ time, date: formattedDate });
+              });
             }
           });
         }
       });
-      
+
       schedule.value = generatedSchedule;
-      
-      // Fetch booked appointments
       await fetchAppointments();
     }
   } catch (error) {
@@ -270,6 +276,7 @@ async function fetchAppointments() {
       allBookings.value.push({
         day: capitalize(appointment.day),
         time: appointment.time,
+        date: appointment.date,
         patientId: appointment.patientId,
         id: appointment._id
       });
@@ -279,6 +286,7 @@ async function fetchAppointments() {
         userBookings.value.push({
           day: capitalize(appointment.day),
           time: appointment.time,
+          date: appointment.date,
           id: appointment._id
         });
         console.log('Found a user booking:', appointment);
@@ -294,11 +302,17 @@ async function fetchAppointments() {
 }
 
 function nextWeek() {
-  currentWeek.value.setDate(currentWeek.value.getDate() + 7);
+  const newWeek = new Date(currentWeek.value);
+  newWeek.setDate(newWeek.getDate() + 7);
+  currentWeek.value = newWeek;
+  fetchDoctorData();
 }
 
 function prevWeek() {
-  currentWeek.value.setDate(currentWeek.value.getDate() - 7);
+  const newWeek = new Date(currentWeek.value);
+  newWeek.setDate(newWeek.getDate() - 7);
+  currentWeek.value = newWeek;
+  fetchDoctorData();
 }
 
 // Open dialog when a time slot is clicked
@@ -338,53 +352,40 @@ async function bookTime() {
       router.push('/signIn');
       return;
     }
-    
-    console.log('Booking appointment for doctor:', doctorId.value);
-    console.log('Selected day:', selectedDay.value);
-    console.log('Selected time:', selectedTime.value);
-    
+
+    const selectedDate = schedule.value[selectedDay.value].find(
+      (slot) => slot.time === selectedTime.value
+    ).date;
+
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-    
-    // Save the appointment to the backend
+
     const appointmentData = {
       doctorId: doctorId.value,
       day: selectedDay.value.toLowerCase(),
       time: selectedTime.value,
-      patientId: currentUserId.value
+      date: selectedDate,
+      patientId: currentUserId.value,
     };
-    
-    console.log('Sending appointment data:', appointmentData);
-    
+
     const response = await axios.post(`${apiUrl}/api/appointments`, appointmentData);
-    console.log('Backend response:', response.data);
-    
+
     const newBooking = {
       day: selectedDay.value,
       time: selectedTime.value,
+      date: selectedDate,
       id: response.data._id,
-      patientId: currentUserId.value
+      patientId: currentUserId.value,
     };
-    
-    // Add to user bookings
-    userBookings.value.push({
-      day: selectedDay.value,
-      time: selectedTime.value,
-      id: response.data._id
-    });
-    
-    // Add to all bookings as well
+
+    userBookings.value.push(newBooking);
     allBookings.value.push(newBooking);
-    
-    // Close the confirmation dialog and show success dialog
+
     dialog.value = false;
     successDialog.value = true;
-    
-    // Clear the selected time after booking
     selectedTime.value = '';
   } catch (error) {
     console.error('Error booking appointment:', error);
-    
-    // Check if this is an "already booked" error
+
     if (error.response?.data?.message === 'This time slot is already booked') {
       dialogTitle.value = 'Time Slot Already Booked';
       dialogMessage.value = 'This time slot is already booked. Please select another time.';
@@ -392,10 +393,8 @@ async function bookTime() {
       dialogTitle.value = 'Booking Failed';
       dialogMessage.value = 'Failed to book appointment. Please try again.';
     }
-    
+
     dialog.value = true;
-    
-    // Refresh appointments to make sure we have latest data
     await fetchAppointments();
   }
 }

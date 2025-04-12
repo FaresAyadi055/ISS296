@@ -266,6 +266,7 @@ const appointmentSchema = new mongoose.Schema({
   day: { type: String, required: true },
   time: { type: String, required: true },
   patientId: { type: String, required: true },
+  date: { type: String, required: true }, // Add the date field
   createdAt: { type: Date, default: Date.now }
 });
 
@@ -460,4 +461,4 @@ app.put('/api/doctors/:id', authenticateToken, async (req, res) => {
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
-}); 
+});
