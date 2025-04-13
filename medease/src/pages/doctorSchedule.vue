@@ -1,163 +1,185 @@
 <template>
-  <navbardoctor />
-  <div class="schedule-container">
-    <h2 class="title">Doctor's Schedule</h2>
-    <div class="schedule-grid">
-      <div class="header"></div>
-      <div class="header" v-for="slot in timeSlots" :key="slot">{{ slot }}</div>
-      <template v-for="(day, dayIndex) in days" :key="dayIndex">
-        <div class="header">{{ day }}</div>
-        <template v-for="(slot, index) in timeSlots" :key="index">
-          <div class="appointment" @click="openAppointment(slot, day)">
-            <span v-if="appointments[day] && appointments[day][slot]">
-              {{ appointments[day][slot].patientName }}
-            </span>
-            <button v-else @click.stop="selectPatient(slot, day)">+</button>
-          </div>
-        </template>
-      </template>
-    </div>
+  <v-app style="background-color: #f8fafc;">
+    <navbardoctor />
 
-    <!-- Modal to select patient -->
-    <v-dialog v-model="showModal" max-width="400">
-      <v-card>
-        <v-card-title>Select Patient</v-card-title>
-        <v-card-text>
-          <v-select
-            v-model="selectedPatient"
-            :items="patients"
-            item-title="fullName"
-            item-value="id"
-            label="Select a patient"
-          ></v-select>
-        </v-card-text>
-        <v-card-actions>
-          <v-btn color="primary" @click="confirmAppointment">Confirm</v-btn>
-          <v-btn color="error" @click="cancelModal">Cancel</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-  </div>
+    <v-main>
+      <v-container>
+        <div class="text-center mb-6">
+          <h1 class="text-primary font-weight-bold mb-2">
+            Dr. {{ doctorData.firstName }} {{ doctorData.lastName }}
+          </h1>
+        </div>
+
+        <v-row class="my-4">
+          <v-col cols="12" class="d-flex justify-space-between align-center">
+            <v-btn @click="prevWeek" color="primary">Previous Week</v-btn>
+            <h2 class="text-blue-darken-2 font-weight-medium">Week of {{ formattedWeek }}</h2>
+            <v-btn @click="nextWeek" color="primary">Next Week</v-btn>
+          </v-col>
+        </v-row>
+
+        <div v-if="loading" class="text-center my-5">
+          <v-progress-circular indeterminate color="primary"></v-progress-circular>
+          <p class="mt-2">Loading schedule...</p>
+        </div>
+
+        <v-table v-else class="custom-table">
+          <thead>
+            <tr>
+              <th class="text-blue-darken-1">Day</th>
+              <th class="text-blue-darken-1">Appointments</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr 
+              v-for="(appointments, day, index) in schedule" 
+              :key="day"
+              :class="{ 'table-row-alt': index % 2 !== 0 }"
+            >
+              <td class="text-blue-grey-darken-3 font-weight-medium">{{ day }}</td>
+              <td>
+                <div v-if="appointments.length === 0" class="text-caption text-grey">No appointments</div>
+                <v-chip 
+                  v-for="(appointment, i) in appointments" 
+                  :key="i" 
+                  class="ma-1" 
+                  color="primary" 
+                  text-color="white"
+                >
+                  {{ appointment.time }} - {{ appointment.patientName }}
+                </v-chip>
+              </td>
+            </tr>
+          </tbody>
+        </v-table>
+      </v-container>
+    </v-main>
+  </v-app>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
+import NavbarDoctor from '@/components/navbardoctor.vue';
 
-const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-const timeSlots = Array.from({ length: 16 }, (_, i) => `${8 + Math.floor(i / 2)}:${i % 2 === 0 ? '00' : '30'}`);
-const appointments = ref({});
-const patients = ref([]);
-const showModal = ref(false);
-const selectedPatient = ref(null);
-const selectedSlot = ref(null);
-const selectedDay = ref(null);
+const schedule = ref({});
+const loading = ref(true);
+const currentWeek = ref(new Date());
+const doctorId = ref(''); // Store the logged-in doctor's ID
+const doctorData = ref({ firstName: '', lastName: '' }); // Store the logged-in doctor's data
 
-// Fetch patients and appointments on component mount
-onMounted(async () => {
-  try {
-    const { data } = await axios.get('/api/patients');
-    patients.value = data.map(patient => ({
-      id: patient.id,
-      fullName: `${patient.firstName} ${patient.lastName}`
-    }));
+const formattedWeek = computed(() => {
+  const startOfWeek = new Date(currentWeek.value);
+  const endOfWeek = new Date(currentWeek.value);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
 
-    await fetchAppointments(); // Load appointments
-  } catch (error) {
-    console.error('Error fetching data:', error);
-  }
+  const formatDate = (date) => date.toISOString().split("T")[0];
+  return `${formatDate(startOfWeek)} - ${formatDate(endOfWeek)}`;
 });
 
-// Fetch updated appointments from the backend
-const fetchAppointments = async () => {
+const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+async function fetchSchedule() {
+  loading.value = true;
   try {
-    const appointmentsRes = await axios.get('/api/appointments');
-    appointments.value = appointmentsRes.data; // 🔄 Refresh the schedule
-  } catch (error) {
-    console.error('Error fetching updated appointments:', error);
-  }
-};
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const response = await axios.get(`${apiUrl}/api/appointments/${doctorId.value}`);
 
-// Select patient for the appointment
-const selectPatient = (time, day) => {
-  console.log("Patient selection initiated for:", time, day); // Debugging
-  selectedSlot.value = time;
-  selectedDay.value = day;
-  showModal.value = true; // Ensure the modal is shown
-};
-
-// Confirm the appointment and refresh the schedule
-const confirmAppointment = async () => {
-  if (!selectedPatient.value) return;
-
-  try {
-    await axios.post('/api/appointments', {
-      patientId: selectedPatient.value,
-      time: selectedSlot.value,
-      day: selectedDay.value
+    const generatedSchedule = {};
+    days.forEach((day) => {
+      generatedSchedule[day] = [];
     });
 
-    await fetchAppointments(); // 🔄 Refresh schedule after booking
+    for (const appointment of response.data) {
+      const capitalizedDay = appointment.day.charAt(0).toUpperCase() + appointment.day.slice(1);
+      let patientName = 'Unknown Patient';
 
-    showModal.value = false; // Close modal after confirming the appointment
+      if (appointment.patientId) {
+        try {
+          const patientResponse = await axios.get(`${apiUrl}/api/patients/${appointment.patientId}`);
+          const patient = patientResponse.data;
+          patientName = `${patient.firstName} ${patient.lastName}`;
+        } catch (error) {
+          console.error(`Error fetching patient details for ID ${appointment.patientId}:`, error);
+        }
+      }
+
+      if (generatedSchedule[capitalizedDay]) {
+        generatedSchedule[capitalizedDay].push({
+          time: appointment.time,
+          patientName,
+        });
+      }
+    }
+
+    schedule.value = generatedSchedule;
+    console.log('Generated Schedule:', schedule.value); // Debugging log
   } catch (error) {
-    console.error('Error booking appointment:', error);
+    console.error('Error fetching schedule:', error);
+  } finally {
+    loading.value = false;
   }
-};
+}
 
-// Cancel modal action
-const cancelModal = () => {
-  console.log("Canceling modal..."); // Debugging cancel action
-  showModal.value = false;
-};
+function nextWeek() {
+  const newWeek = new Date(currentWeek.value);
+  newWeek.setDate(newWeek.getDate() + 7);
+  currentWeek.value = newWeek;
+  fetchSchedule();
+}
+
+function prevWeek() {
+  const newWeek = new Date(currentWeek.value);
+  newWeek.setDate(newWeek.getDate() - 7);
+  currentWeek.value = newWeek;
+  fetchSchedule();
+}
+
+onMounted(() => {
+  const storedDoctor = localStorage.getItem('doctor') || sessionStorage.getItem('doctor');
+  if (storedDoctor) {
+    const doctor = JSON.parse(storedDoctor);
+    doctorId.value = doctor.id || doctor._id;
+    doctorData.value.firstName = doctor.firstName || '';
+    doctorData.value.lastName = doctor.lastName || '';
+  } else {
+    console.error('Doctor not logged in. Redirecting to login page.');
+    // Redirect to login page if doctor is not logged in
+    window.location.href = '/doctorSignin';
+  }
+
+  fetchSchedule();
+});
 </script>
 
 <style scoped>
-.schedule-container {
-  text-align: center;
-  padding: 20px;
-  background-color: white;
-  color: black;
-}
-.title {
-  font-size: 24px;
-  margin-bottom: 10px;
-  color: #007bff;
-}
-.schedule-grid {
-  display: grid;
-  grid-template-columns: 100px repeat(16, 1fr);
-  gap: 5px;
-  background-color: white;
-  padding: 10px;
-  border-radius: 10px;
-}
-.header {
+/* Table header */
+th {
+  background-color: #E3F2FD !important; /* Soft blue */
+  color: #1976D2 !important; /* Vuetify blue */
   font-weight: bold;
-  text-align: center;
-  padding: 10px;
-  background-color: #007bff;
-  color: white;
+  border: none !important; /* No border */
 }
-.appointment {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  border: 1px solid #007bff;
-  padding: 5px;
-  cursor: pointer;
-  background-color: white;
-  color: #007bff;
+
+/* Alternating row colors */
+.table-row-alt {
+  background-color: #FFFFFF !important; /* White background for alternating rows */
 }
-button {
-  background: white;
-  color: #007bff;
-  border: 1px solid #007bff;
-  padding: 5px;
-  cursor: pointer;
+
+/* Table cell content */
+td {
+  color: #607D8B !important; /* Blue-gray */
+  font-weight: 500;
+  border: none !important; /* No border */
+  background-color: white !important; /* No background color */
 }
-button:hover {
-  background: #007bff;
-  color: white;
+
+v-chip {
+  background-color: #1976D2 !important; /* Blue background for chips */
+  color: white !important; /* Text in white */
+}
+
+h1, h2 {
+  color: #1976D2 !important; /* Blue text */
 }
 </style>

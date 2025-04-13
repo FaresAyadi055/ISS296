@@ -276,7 +276,7 @@ const Appointment = mongoose.model('Appointment', appointmentSchema);
 app.get('/api/appointments/:doctorId', async (req, res) => {
   try {
     console.log('Fetching appointments for doctor:', req.params.doctorId);
-    const appointments = await Appointment.find({ doctorId: req.params.doctorId });
+    const appointments = await Appointment.find({ doctorId: req.params.doctorId }).populate('patientId', 'firstName lastName');
     console.log('Found appointments:', appointments);
     res.json(appointments || []); // Return empty array if no appointments found
   } catch (error) {
