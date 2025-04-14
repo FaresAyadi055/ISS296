@@ -39,15 +39,39 @@
               <td class="text-blue-grey-darken-3 font-weight-medium">{{ day }}</td>
               <td>
                 <div v-if="appointments.length === 0" class="text-caption text-grey">No appointments</div>
-                <v-chip 
-                  v-for="(appointment, i) in appointments" 
-                  :key="i" 
-                  class="ma-1" 
-                  color="primary" 
-                  text-color="white"
-                >
-                  {{ appointment.time }} - {{ appointment.patientName }}
-                </v-chip>
+                <div v-for="(appointment, i) in appointments" :key="i" class="appointment-details">
+                  <v-chip 
+                    class="ma-1 clickable-chip" 
+                    color="primary" 
+                    text-color="white"
+                    @click="togglePatientDetails(appointment.patientId)"
+                  >
+                    {{ appointment.time }} - {{ appointment.patientName }}
+                  </v-chip>
+                  <v-expand-transition>
+                    <div v-if="expandedPatientId === appointment.patientId" class="patient-details">
+                      <p><strong>Name:</strong> {{ patientDetails.firstName }} {{ patientDetails.lastName }}</p>
+                      <p><strong>Email:</strong> {{ patientDetails.email }}</p>
+                      <p><strong>Phone:</strong> {{ patientDetails.phone }}</p>
+                      <p><strong>Address:</strong> {{ patientDetails.address }}</p>
+                      <p><strong>DOB:</strong> {{ new Date(patientDetails.dob).toLocaleDateString() }}</p>
+                      <p><strong>Gender:</strong> {{ patientDetails.gender }}</p>
+                      <p><strong>Health Conditions:</strong></p>
+                      <ul>
+                        
+                        <li v-if="patientDetails.healthConditions.chronic">
+                          <strong>Chronic:</strong> {{ patientDetails.healthConditions.chronic }}
+                        </li>
+                        <li v-if="patientDetails.healthConditions.medications">
+                          <strong>Medications:</strong> {{ patientDetails.healthConditions.medications }}
+                        </li>
+                        <li v-if="patientDetails.healthConditions.allergies">
+                          <strong>Allergies:</strong> {{ patientDetails.healthConditions.allergies }}
+                        </li>
+                      </ul>
+                    </div>
+                  </v-expand-transition>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -67,6 +91,8 @@ const loading = ref(true);
 const currentWeek = ref(new Date());
 const doctorId = ref(''); // Store the logged-in doctor's ID
 const doctorData = ref({ firstName: '', lastName: '' }); // Store the logged-in doctor's data
+const expandedPatientId = ref(null); // Track which patient's details are expanded
+const patientDetails = ref({}); // Store the details of the selected patient
 
 const formattedWeek = computed(() => {
   const startOfWeek = new Date(currentWeek.value);
@@ -108,6 +134,7 @@ async function fetchSchedule() {
         generatedSchedule[capitalizedDay].push({
           time: appointment.time,
           patientName,
+          patientId: appointment.patientId
         });
       }
     }
@@ -133,6 +160,30 @@ function prevWeek() {
   newWeek.setDate(newWeek.getDate() - 7);
   currentWeek.value = newWeek;
   fetchSchedule();
+}
+
+function togglePatientDetails(patientId) {
+  if (expandedPatientId.value === patientId) {
+    expandedPatientId.value = null;
+    return;
+  }
+
+  // Check if the details for this patient are already loaded
+  if (patientDetails.value.id === patientId) {
+    expandedPatientId.value = patientId;
+    return;
+  }
+
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  axios.get(`${apiUrl}/api/patients/${patientId}`)
+    .then(response => {
+      patientDetails.value = { ...response.data, id: patientId }; // Store patient ID to avoid duplicate fetches
+      expandedPatientId.value = patientId;
+    })
+    .catch(error => {
+      console.error('Error fetching patient details:', error);
+      alert('Failed to fetch patient details.');
+    });
 }
 
 onMounted(() => {
@@ -181,5 +232,23 @@ v-chip {
 
 h1, h2 {
   color: #1976D2 !important; /* Blue text */
+}
+
+.appointment-details {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.patient-details {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.clickable-chip {
+  cursor: pointer;
 }
 </style>
