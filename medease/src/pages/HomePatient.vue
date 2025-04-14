@@ -94,16 +94,17 @@
     </v-main>
 
     <Footer />
+    <Chatbot />
   </v-app>
 </template>
 
 <script setup>
 import NavBar from '@/components/navbarAuthPatient.vue'
 import Footer from '@/components/footer.vue'
+import Chatbot from '@/components/Chatbot.vue'
 import doctorIllustration from '@/assets/doctor-illustration.png'
 import heartIcon from '@/assets/heart-icon.png'
 import calendarIcon from '@/assets/calendar-icon.png'
-
 </script>
 
 <style scoped>
