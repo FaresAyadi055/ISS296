@@ -1,0 +1,185 @@
+  {
+    "doctors": [
+      {
+        "id": 1,
+        "name": "Dr. Kamel Ouertani",
+        "email": "kamel.ouertani@example.com",
+        "password": "passwordKamel",
+        "phone": "+216 23 654 321",
+        "description": "Studied at University of Tunis and completed residency at Charles Nicolle Hospital",
+        "specialty": "Endocrinologist",
+        "location": "Tunis",
+        "rating": 3.9
+      },
+      {
+        "id": 2,
+        "name": "Dr. Leila Masmoudi",
+        "email": "leila.masmoudi@example.com",
+        "password": "passwordLeila",
+        "phone": "+216 23 654 321",
+        "description": "Studied at University of Sfax and completed residency at Habib Bourguiba University Hospital",
+        "specialty": "Ophthalmologist",
+        "location": "Bizerte",
+        "rating": 4.0
+      },
+      {
+        "id": 3,
+        "name": "Dr. John Doe",
+        "email": "john.doe@example.com",
+        "password": "passwordJohn",
+        "phone": "+216 23 654 321",
+        "description": "Studied at University of Monastir and completed residency at Farhat Hached University Hospital",
+        "specialty": "Cardiologist",
+        "location": "Monastir",
+        "rating": 4.5
+      },
+      {
+        "id": 4,
+        "name": "Dr. Sarah Smith",
+        "email": "sarah.smith@example.com",
+        "password": "passwordSarah",
+        "phone": "+216 23 654 321",
+        "description": "Studied at University of Sfax and completed residency at Sfax University Hospital",
+        "specialty": "Neurologist",
+        "location": "Nabeul",
+        "rating": 4.7
+      },
+      {
+        "id": 5,
+        "name": "Dr. Ahmed Khaled",
+        "email": "ahmed.khaled@example.com",
+        "password": "passwordAhmed",
+        "phone": "+216 23 654 321",
+        "description": "Studied at University of Tunis El Manar and completed residency at Rabta Hospital",
+        "specialty": "Cardiologist",
+        "location": "Tunis",
+        "rating": 4.2
+      },
+      {
+        "id": 6,
+        "name": "Dr. Zied Ladhari",
+        "email": "zied.ladhari@example.com",
+        "password": "passwordZied",
+        "phone": "+216 23 654 321",
+        "description": "Studied at University of Sousse and completed residency at Sahloul University Hospital",
+        "specialty": "Pediatrician",
+        "location": "Sousse",
+        "rating": 4.3
+      },
+      {
+        "id": 7,
+        "name": "Dr. Amina Khelifa",
+        "email": "amina.khelifa@example.com",
+        "password": "passwordAmina",
+        "phone": "+216 23 654 321",
+        "description": "Studied at University of Sousse and completed residency at Sahloul University Hospital",
+        "specialty": "Dermatologist",
+        "location": "Sousse",
+        "rating": 4.9
+      },
+      {
+        "id": 8,
+        "name": "Dr. Sami Ben Ali",
+        "email": "sami.benali@example.com",
+        "password": "passwordSami",
+        "phone": "+216 23 654 321",
+        "description": "Studied at University of Tunis and completed residency at Rabta Hospital",
+        "specialty": "Cardiologist",
+        "location": "Tunis",
+        "rating": 3.9
+      },
+      {
+        "id": 9,
+        "name": "Dr. Tarek Ayari",
+        "email": "tarek.ayari@example.com",
+        "password": "passwordTarek",
+        "phone": "+216 23 654 321",
+        "description": "Studied at University of Monastir and completed residency at Farhat Hached University Hospital",
+        "specialty": "Psychiatrist",
+        "location": "Monastir",
+        "rating": 4.5
+      },
+      {
+        "id": 10,
+        "name": "Dr. Manel Ben Ahmed",
+        "email": "manel.benahmed@example.com",
+        "password": "passwordManel",
+        "phone": "+216 23 654 321",
+        "description": "Studied at University of Monastir and completed residency at Farhat Hached University Hospital",
+        "specialty": "Dermatologist",
+        "location": "Kairouan",
+        "rating": 3.7
+      },
+      {
+        "id": 11,
+        "name": "Dr. Sarah Aloui",
+        "email": "sarah.aloui@example.com",
+        "password": "passwordSarahAloui",
+        "phone": "+216 23 654 321",
+        "description": "Studied at University of Monastir and completed residency at Farhat Hached University Hospital",
+        "specialty": "Gastroenterologist",
+        "location": "Nabeul",
+        "rating": 4.2
+      },
+      {
+        "id": 12,
+        "name": "Dr. Khaled Cherif",
+        "email": "khaled.cherif@example.com",
+        "password": "passwordKhaled",
+        "phone": "+216 23 654 321",
+        "description": "Studied at University of Sfax and completed residency at Sfax University Hospital",
+        "specialty": "Neurologist",
+        "location": "Bizerte",
+        "rating": 4.7
+      },
+      {
+        "id": 13,
+        "name": "Dr. Yassir Zribi",
+        "email": "yassir.zribi@example.com",
+        "password": "passwordYassir",
+        "phone": "+216 23 654 321",
+        "description": "Studied at University of Monastir and completed residency at Farhat Hached University Hospital",
+        "specialty": "Pediatrician",
+        "location": "Monastir",
+        "rating": 4.8
+      }
+    ],
+    "categories": {
+      "Speciality": [
+        "Dermatologist",
+        "Cardiologist",
+        "Endocrinologist",
+        "Gastroenterologist",
+        "Hematologist",
+        "Neurologist",
+        "Pediatrician",
+        "Obstetrician",
+        "Psychiatrist",
+        "Ophthalmologist",
+        "Otolaryngologist"
+      ],
+      "Location": [
+        "Tunis",
+        "Bizerte",
+        "Zaghouan",
+        "Nabeul",
+        "Sousse",
+        "Kairouan",
+        "Monastir",
+        "Mahdia",
+        "Jendouba",
+        "Beja",
+        "Siliana",
+        "Kef",
+        "Kasserine",
+        "Sidi Bouzid",
+        "Sfax",
+        "Gafsa",
+        "Gabes",
+        "Tozeur",
+        "Kebili",
+        "Medenine",
+        "Tataouine"
+      ]
+    }
+  }
