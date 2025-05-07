@@ -81,12 +81,12 @@ const router = useRouter()
 const showChat = ref(false)
 const messages = ref(
   JSON.parse(localStorage.getItem('medease_chat_history')) || [
-    {
-      text: 'Hello! I am your MedEase assistant. How can I help you today?',
-      sender: 'bot',
+  {
+    text: 'Hello! I am your MedEase assistant. How can I help you today?',
+    sender: 'bot',
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       type: 'text'
-    }
+  }
   ]
 )
 const newMessage = ref('')
@@ -190,7 +190,7 @@ const sendMessage = async () => {
 // Function to handle doctor queries
 const handleDoctorQuery = async (message) => {
   try {
-    isLoading.value = true
+  isLoading.value = true
     console.log('Processing doctor query:', message)
     
     // Convert message to lowercase for better matching
@@ -232,12 +232,12 @@ const handleDoctorQuery = async (message) => {
         ? `I couldn't find any ${specialty} specialists available at the moment. Please try a different specialty or check back later.`
         : 'I couldn\'t find any doctors matching your criteria. Please try specifying a specialty or check back later.'
       
-      messages.value.push({
+    messages.value.push({
         text: noResultsMessage,
-        sender: 'bot',
+      sender: 'bot',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         type: 'text'
-      })
+    })
     }
   } catch (error) {
     console.error('Error fetching doctors:', error)

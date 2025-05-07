@@ -15,6 +15,7 @@ import BookingPage from "@/pages/BookingPage.vue";
 import Booking from '@/pages/booking.vue';
 import EPrescription from '@/components/EPrescription.vue'
 import PatientProfile from '@/components/PatientProfile.vue'
+import Pharmacy from '@/pages/Pharmacy.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -24,6 +25,12 @@ const router = createRouter({
     {
       path: "/BookingPage/:doctorId",  // Updated path to match the navigation
       component: BookingPage,  // Component you want to display
+    },
+    {
+      path: '/pharmacy',
+      name: 'Pharmacy',
+      component: Pharmacy,
+      meta: { requiresAuth: true }
     },
     {
       path: '/doctor/prescription',
