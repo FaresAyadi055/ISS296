@@ -93,7 +93,7 @@
 
         <v-row class="justify-center mb-10">
           <v-col cols="12" md="8">
-            <v-card elevation="4" class="pa-8 text-center daily-quote-card" style="border-radius: 24px; position: relative; overflow: visible;">
+            <v-card elevation="4" class="pa-8 text-center daily-quote-card" style="border-radius: 24px; position: relative; overflow: visible; background: linear-gradient(90deg, #e0f2fe 0%, #f0f9ff 100%);">
               <v-icon size="40" color="#0ea5e9" class="mb-2" style="position: absolute; left: 24px; top: -20px; background: #e0f2fe; border-radius: 50%; padding: 8px;">mdi-format-quote-open</v-icon>
               <div class="text-h5 font-italic mb-2 daily-quote-text" style="color: #0ea5e9; min-height: 32px;">
                 <span v-if="quoteLoading">
@@ -140,24 +140,6 @@
             </div>
           </v-col>
         </v-row>
-
-        <v-card
-          v-for="doctor in doctors"
-          :key="doctor.id"
-          class="mb-4"
-          @click="router.push(`/doctor/profile/${doctor.id}`)"
-          style="cursor: pointer;"
-        >
-          <v-card-item>
-            <v-card-title>
-              <v-avatar size="40" class="mr-2">
-                <v-img :src="doctor.photo || 'https://via.placeholder.com/150'"></v-img>
-              </v-avatar>
-              Dr. {{ doctor.firstName }} {{ doctor.lastName }}
-            </v-card-title>
-            <v-card-subtitle>{{ doctor.specialty }}</v-card-subtitle>
-          </v-card-item>
-        </v-card>
       </v-container>
     </v-main>
 
@@ -228,30 +210,6 @@ const fetchDailyQuote = async () => {
 onMounted(() => {
   fetchDailyQuote()
 })
-
-const doctors = [
-  {
-    id: 1,
-    firstName: 'John',
-    lastName: 'Doe',
-    specialty: 'Cardiologist',
-    photo: 'https://via.placeholder.com/150'
-  },
-  {
-    id: 2,
-    firstName: 'Jane',
-    lastName: 'Smith',
-    specialty: 'Dermatologist',
-    photo: 'https://via.placeholder.com/150'
-  },
-  {
-    id: 3,
-    firstName: 'Michael',
-    lastName: 'Johnson',
-    specialty: 'Orthopedic Surgeon',
-    photo: 'https://via.placeholder.com/150'
-  }
-]
 
 const reviews = [
   {
