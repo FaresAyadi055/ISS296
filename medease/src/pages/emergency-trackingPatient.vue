@@ -11,15 +11,13 @@
       </v-container>
   
       <Navbar />
-      <sync-dialog></sync-dialog>
       <Footer />
     </v-app>
   </template>
   
   <script setup>
-  import Navbar from '@/components/navbarAuthPatient.vue'
+  import Navbar from '@/components/navbarpatient.vue'
   import Footer from '@/components/footer.vue'
-  import SyncDialog from '@/components/SyncButton.vue'
   import LeafletMap from '@/components/LeafletMap.vue'
   </script>
   
@@ -51,4 +49,3 @@
     background-color: white !important;
   }
   </style>
-  

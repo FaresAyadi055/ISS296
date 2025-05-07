@@ -80,8 +80,20 @@ const patientSchema = new mongoose.Schema({
   photo: String
 });
 
+// Hospital Schema
+const hospitalSchema = new mongoose.Schema({
+  id: Number,
+  name: String,
+  latitude: Number,
+  longitude: Number,
+  address: String,
+  type: String,
+  phone: String
+});
+
 const Doctor = mongoose.model('Doctor', doctorSchema);
 const Patient = mongoose.model('Patient', patientSchema);
+const Hospital = mongoose.model('Hospital', hospitalSchema);
 
 // Authentication Middleware
 const authenticateToken = (req, res, next) => {
@@ -455,6 +467,16 @@ app.put('/api/doctors/:id', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error updating doctor:', error);
     res.status(400).json({ message: error.message });
+  }
+});
+
+// Add this route to fetch all hospitals
+app.get('/api/hospitals', async (req, res) => {
+  try {
+    const hospitals = await Hospital.find();
+    res.json(hospitals);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching hospitals' });
   }
 });
 

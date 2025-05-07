@@ -1,13 +1,15 @@
 <template>
-  <div ref="mapContainer" class="leaflet-map"></div>
+  <div class="map-wrapper">
+    <div ref="mapContainer" class="leaflet-map"></div>
+  </div>
 </template>
 
 <script>
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Geocoder, geocoders } from 'leaflet-control-geocoder';
+import 'leaflet-control-geocoder';
 import 'leaflet-control-geocoder/dist/Control.Geocoder.css';
-import hospitalsData from '@/repos/hospitals.json';
+import axios from 'axios';
 
 // Fix default marker icons (Leaflet issue with Webpack/Vite)
 const iconRetinaUrl = new URL('leaflet/dist/images/marker-icon-2x.png', import.meta.url).href;
@@ -37,14 +39,25 @@ export default {
       map: null,
       geocoder: null,
       markers: [],
+      hospitals: [],
     };
   },
-  mounted() {
+  async mounted() {
     this.initMap();
     this.addGeocoder();
+    await this.fetchHospitals();
     this.addHospitalMarkers();
   },
   methods: {
+    async fetchHospitals() {
+      try {
+        const res = await axios.get('http://localhost:3001/api/hospitals');
+        this.hospitals = res.data;
+      } catch (e) {
+        this.hospitals = [];
+      }
+    },
+
     initMap() {
       this.map = L.map(this.$refs.mapContainer).setView(this.center, this.zoom);
 
@@ -54,11 +67,19 @@ export default {
     },
 
     addGeocoder() {
-      this.geocoder = new Geocoder({
+      this.geocoder = L.Control.geocoder({
         defaultMarkGeocode: false,
         collapsed: false,
       });
       this.geocoder.addTo(this.map);
+      this.geocoder.on('markgeocode', (e) => {
+        const bbox = e.geocode.bbox;
+        this.map.fitBounds(bbox);
+        // Optionally, add a marker at the searched location
+        const marker = L.marker(e.geocode.center).addTo(this.map);
+        marker.bindPopup(e.geocode.name).openPopup();
+        this.markers.push(marker);
+      });
     },
 
     addHospitalMarkers() {
@@ -73,7 +94,7 @@ export default {
         Surgical: this.createIcon('pink'),
       };
 
-      hospitalsData.hospitals.forEach(hospital => {
+      (this.hospitals || []).forEach(hospital => {
         const marker = L.marker([hospital.latitude, hospital.longitude], {
           icon: typeIcons[hospital.type] || typeIcons.General,
         })
@@ -121,6 +142,26 @@ export default {
   height: 500px;
   width: 100%;
   border-radius: 8px;
+}
+
+.map-wrapper {
+  position: relative;
+}
+
+.leaflet-control-geocoder {
+  z-index: 1000 !important;
+  position: absolute !important;
+  top: 10px;
+  left: 50px;
+  width: 300px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+:deep(.leaflet-control-geocoder input) {
+  color: #000 !important;
+  background: #fff !important;
 }
 
 .custom-marker {

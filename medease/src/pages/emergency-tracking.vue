@@ -11,7 +11,6 @@
     </v-container>
 
     <Navbar />
-    <sync-dialog></sync-dialog>
     <Footer />
   </v-app>
 </template>
@@ -19,7 +18,6 @@
 <script setup>
 import Navbar from '@/components/navbar.vue'
 import Footer from '@/components/footer.vue'
-import SyncDialog from '@/components/SyncButton.vue'
 import LeafletMap from '@/components/LeafletMap.vue'
 </script>
 
