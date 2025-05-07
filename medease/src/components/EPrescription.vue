@@ -13,8 +13,9 @@
               <v-select
                 v-model="selectedPatient"
                 :items="patients"
-                item-title="name"
+                item-title="fullName"
                 item-value="id"
+                return-object
                 label="Select Patient"
                 required
                 class="mb-4 black-text"
@@ -25,14 +26,26 @@
                 :loading="loadingPatients"
               ></v-select>
 
-              <div v-if="selectedPatient" class="d-flex align-center mb-4">
-                <v-avatar size="40" class="mr-2">
-                  <v-img :src="selectedPatient.photo || '/default-avatar.png'" alt="Patient Photo"></v-img>
-                </v-avatar>
-                <div>
-                  <p class="text-subtitle-1 mb-0" style="color: black;">ID: {{ selectedPatient.id }}</p>
-                  <p class="text-caption mb-0" style="color: black;">Age: {{ selectedPatient.age }}</p>
-                </div>
+              <div v-if="selectedPatient" class="mb-4">
+                <v-card class="pa-3" outlined>
+                  <v-row>
+                    <v-col cols="12" md="2" class="d-flex align-center">
+                      <v-avatar size="60">
+                        <v-img :src="selectedPatient.photo || '/default-avatar.png'" alt="Patient Photo"></v-img>
+                      </v-avatar>
+                    </v-col>
+                    <v-col cols="12" md="10">
+                      <div class="text-subtitle-1 font-weight-bold" style="color: black;">{{ selectedPatient.fullName }}</div>
+                      <div class="text-body-2" style="color: black;">
+                        <span v-if="selectedPatient.gender">Gender: {{ selectedPatient.gender }}</span>
+                        <span v-if="selectedPatient.dob"> | Date of Birth: {{ selectedPatient.dob.substring(0,10) }}</span>
+                        <span v-if="selectedPatient.address"> | Address: {{ selectedPatient.address }}</span>
+                        <span v-if="selectedPatient.phone"> | Phone: {{ selectedPatient.phone }}</span>
+                        <span v-if="selectedPatient.email"> | Email: {{ selectedPatient.email }}</span>
+                      </div>
+                    </v-col>
+                  </v-row>
+                </v-card>
               </div>
 
               <!-- Medications List -->
@@ -281,7 +294,12 @@ export default {
       loadingPatients.value = true
       try {
         const patientsData = await patientService.getAllPatients()
-        patients.value = patientsData
+        // Add fullName property for display
+        patients.value = patientsData.map(p => ({
+          ...p,
+          fullName: `${p.firstName} ${p.lastName}`,
+          id: p._id // for compatibility if needed
+        }))
       } catch (error) {
         console.error('Error loading patients:', error)
         // Show error message to user
@@ -401,4 +419,4 @@ export default {
 .flex-column {
   flex-direction: column;
 }
-</style> 
+</style>

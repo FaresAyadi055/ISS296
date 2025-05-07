@@ -65,7 +65,7 @@ import AdminNavbar from '@/components/AdminNavbar.vue'
 import PatientsTable from '@/components/PatientsTable.vue'
 import hospitalsData from '@/repos/hospitals.json'
 import doctorsData from '@/repos/doctors.json'
-import patientsData from '@/repos/patient.json'
+import { patientService } from '@/services/PatientService.js'
 
 export default {
   name: 'App',
@@ -77,13 +77,12 @@ export default {
   data() {
     const hospitals = hospitalsData.hospitals;
     const doctors = doctorsData;
-    const patients = patientsData.patients;
 
     return {
       drawer: true,
       hospitals,
       doctors,
-      patients,
+      patients: [],
       items: [
         {
           title: 'Hospitals',
@@ -101,10 +100,14 @@ export default {
           title: 'Patients',
           icon: 'mdi-account-group',
           route: '/patients',
-          count: patients.length,
+          count: 0, // Will be set after fetch
         },
       ],
     };
+  },
+  async created() {
+    this.patients = await patientService.getAllPatients();
+    this.items.find(i => i.title === 'Patients').count = this.patients.length;
   },
 };
 </script>

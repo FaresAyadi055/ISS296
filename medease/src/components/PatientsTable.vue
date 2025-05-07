@@ -97,6 +97,7 @@
 
 <script>
 import patientsData from '@/repos/patient.js';
+import { patientService } from '@/services/PatientService.js';
 
 const defaultItem = {
   firstName: '',
@@ -136,12 +137,12 @@ export default {
       patients: [],
     };
   },
-  created() {
-    this.patients = patientsData.patients.map((patient) => ({
+  async created() {
+    this.patients = (await patientService.getAllPatients()).map((patient) => ({
       ...patient,
-      chronic: patient.healthConditions.chronic,
-      medications: patient.healthConditions.medications,
-      allergies: patient.healthConditions.allergies,
+      chronic: patient.healthConditions?.chronic || '',
+      medications: patient.healthConditions?.medications || '',
+      allergies: patient.healthConditions?.allergies || '',
     }));
   },
   methods: {

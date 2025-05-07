@@ -416,6 +416,15 @@ app.delete('/api/patients/:id/reminders/:reminderId', async (req, res) => {
   }
 });
 
+// Add this route to fetch all patients
+app.get('/api/patients', async (req, res) => {
+  try {
+    const patients = await Patient.find();
+    res.json(patients);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching patients' });
+  }
+});
 
 // Add this route to fetch all doctors
 app.get('/api/doctors', async (req, res) => {

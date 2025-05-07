@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_URL = 'http://localhost:3000/api' // Update this with your backend URL
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 export const patientService = {
   // Get all patients
@@ -87,4 +87,4 @@ export const patientService = {
       throw error
     }
   }
-} 
+}
