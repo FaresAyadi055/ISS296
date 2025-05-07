@@ -274,12 +274,13 @@
       const handleRegister = async () => {
         try {
           // Validate name format
-          if (!fullName.value.includes(' ')) {
+          const nameParts = fullName.value.trim().split(' ');
+          if (nameParts.length < 2) {
             showError('Please enter both first name and last name separated by a space.');
             return;
           }
-          
-          const [firstName, lastName] = fullName.value.split(' ');
+          const firstName = nameParts[0];
+          const lastName = nameParts.slice(1).join(' ');
           
           // Convert the selected photo to base64 string
           let photoBase64 = null;
@@ -454,4 +455,3 @@
     border-bottom-color: #666;
   }
   </style>
-  

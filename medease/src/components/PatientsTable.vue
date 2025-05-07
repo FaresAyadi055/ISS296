@@ -96,8 +96,7 @@
 </template>
 
 <script>
-import patientsData from '@/repos/patient.js';
-import { patientService } from '@/services/PatientService.js';
+
 
 const defaultItem = {
   firstName: '',
@@ -113,6 +112,12 @@ const defaultItem = {
 };
 
 export default {
+  props: {
+    patients: {
+      type: Array,
+      default: () => [],
+    },
+  },
   data() {
     return {
       search: '',
@@ -134,16 +139,7 @@ export default {
         { key: 'allergies', title: 'Allergies' },
         { key: 'actions', title: 'Actions', sortable: false },
       ],
-      patients: [],
     };
-  },
-  async created() {
-    this.patients = (await patientService.getAllPatients()).map((patient) => ({
-      ...patient,
-      chronic: patient.healthConditions?.chronic || '',
-      medications: patient.healthConditions?.medications || '',
-      allergies: patient.healthConditions?.allergies || '',
-    }));
   },
   methods: {
     openDialog() {

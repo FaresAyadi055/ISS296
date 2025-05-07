@@ -1,6 +1,7 @@
 <template>
+  <navbardoctor />
   <v-app style="background-color: white;">
-    <navbardoctor />
+    
     
     <v-container class="pa-6">
       <v-row justify="center">
@@ -26,8 +27,10 @@
                 :loading="loadingPatients"
               ></v-select>
 
+              <v-divider class="my-4"></v-divider>
               <div v-if="selectedPatient" class="mb-4">
-                <v-card class="pa-3" outlined>
+                <div class="text-h6 font-weight-bold mb-2" style="color: #579AFE;">Patient Details</div>
+                <v-card class="pa-3 elevation-2" outlined style="background-color: #f5f5f5;">
                   <v-row>
                     <v-col cols="12" md="2" class="d-flex align-center">
                       <v-avatar size="60">
@@ -35,18 +38,24 @@
                       </v-avatar>
                     </v-col>
                     <v-col cols="12" md="10">
-                      <div class="text-subtitle-1 font-weight-bold" style="color: black;">{{ selectedPatient.fullName }}</div>
+                      <div class="text-subtitle-1 font-weight-bold mb-1" style="color: black;">{{ selectedPatient.fullName }}</div>
                       <div class="text-body-2" style="color: black;">
-                        <span v-if="selectedPatient.gender">Gender: {{ selectedPatient.gender }}</span>
-                        <span v-if="selectedPatient.dob"> | Date of Birth: {{ selectedPatient.dob.substring(0,10) }}</span>
-                        <span v-if="selectedPatient.address"> | Address: {{ selectedPatient.address }}</span>
-                        <span v-if="selectedPatient.phone"> | Phone: {{ selectedPatient.phone }}</span>
-                        <span v-if="selectedPatient.email"> | Email: {{ selectedPatient.email }}</span>
+                        <v-icon size="18" color="#579AFE" class="mr-1">mdi-gender-male-female</v-icon>
+                        <span v-if="selectedPatient.gender">{{ selectedPatient.gender }}</span>
+                        <v-icon size="18" color="#579AFE" class="ml-3 mr-1">mdi-cake-variant</v-icon>
+                        <span v-if="selectedPatient.dob">{{ selectedPatient.dob.substring(0,10) }}</span>
+                        <v-icon size="18" color="#579AFE" class="ml-3 mr-1">mdi-home</v-icon>
+                        <span v-if="selectedPatient.address">{{ selectedPatient.address }}</span>
+                        <v-icon size="18" color="#579AFE" class="ml-3 mr-1">mdi-phone</v-icon>
+                        <span v-if="selectedPatient.phone">{{ selectedPatient.phone }}</span>
+                        <v-icon size="18" color="#579AFE" class="ml-3 mr-1">mdi-email</v-icon>
+                        <span v-if="selectedPatient.email">{{ selectedPatient.email }}</span>
                       </div>
                     </v-col>
                   </v-row>
                 </v-card>
               </div>
+              <v-divider class="my-4"></v-divider>
 
               <!-- Medications List -->
               <div v-for="(med, index) in medications" :key="index" class="mb-6">
@@ -178,13 +187,19 @@
               </div>
 
               <div class="d-flex flex-column gap-4">
-                <v-btn
-                  block
-                  @click="addMedication"
-                  style="background-color: #579AFE; color: white;"
-                >
-                  Add Another Medication
-                </v-btn>
+                <v-tooltip text="Add another medication to this prescription">
+                  <template #activator="{ props }">
+                    <v-btn
+                      v-bind="props"
+                      block
+                      @click="addMedication"
+                      style="background-color: #579AFE; color: white;"
+                    >
+                      <v-icon left>mdi-plus</v-icon>
+                      Add Another Medication
+                    </v-btn>
+                  </template>
+                </v-tooltip>
 
                 <v-btn
                   type="submit"
@@ -192,9 +207,13 @@
                   :loading="loading"
                   style="background-color: #579AFE; color: white;"
                 >
+                  <v-icon left>mdi-check-circle</v-icon>
                   Generate E-Prescription
                 </v-btn>
               </div>
+              <v-snackbar v-model="showSuccess" color="success" timeout="3000">
+                E-Prescription generated successfully!
+              </v-snackbar>
             </v-form>
           </v-card>
         </v-col>
@@ -246,6 +265,8 @@ export default {
       'every 6 hours',
       'every 4 hours'
     ]
+
+    const showSuccess = ref(false)
 
     const addMedication = () => {
       medications.value.push({
@@ -316,24 +337,35 @@ export default {
 
       loading.value = true
       try {
-        // Here you would typically make an API call to save the prescription
-        console.log('Generating prescription:', {
-          patientId: selectedPatient.value._id,
-          patientName: selectedPatient.value.name,
-          medications: medications.value
-        })
-        
         // Schedule notifications for medications with reminders enabled
         notificationService.scheduleMedicationReminders(medications.value)
-        
-        // Add medications to patient's profile
+
+        // Add each medication as a reminder to the patient's profile
         for (const medication of medications.value) {
-          await patientService.addMedication(selectedPatient.value._id, medication)
+          // For each reminder time, add a reminder entry
+          if (medication.reminders.enabled && medication.reminders.times.length > 0) {
+            for (const time of medication.reminders.times) {
+              await patientService.addReminder(selectedPatient.value._id, {
+                medication: medication.name,
+                frequency: medication.frequency,
+                time: time,
+                duration: medication.duration
+              })
+            }
+          } else {
+            // If no reminders, still add the medication as a reminder (without time)
+            await patientService.addReminder(selectedPatient.value._id, {
+              medication: medication.name,
+              frequency: medication.frequency,
+              time: '',
+              duration: medication.duration
+            })
+          }
         }
-        
+
         // Show success message
-        alert('E-Prescription generated successfully!')
-        
+        showSuccess.value = true
+
         // Reset form
         selectedPatient.value = null
         medications.value = [{
@@ -366,6 +398,7 @@ export default {
       patients,
       medications,
       frequencyOptions,
+      showSuccess,
       addMedication,
       removeMedication,
       addReminderTime,

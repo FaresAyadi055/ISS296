@@ -49,7 +49,9 @@
     </v-navigation-drawer>
 
     <!-- Main Content Area -->
-    <HospitalTable />  </router-view>
+    <HospitalTable :hospitals="hospitals" />
+    <PatientsTable :patients="patients" />
+    </router-view>
       </v-container>
       
       <!-- Footer at the bottom -->
@@ -61,45 +63,87 @@
 </template>
 
 <script>
-import Footer from '@/components/footer.vue' // Note: Changed to PascalCase
-import hospitalsData from '@/repos/hospitals.json';
+import Footer from '@/components/footer.vue'
 import HospitalTable from '@/components/HospitalTable.vue'
-import doctorsData from '@/repos/doctors.json';
-import patientsData from '@/repos/patient.json';
 import AdminNavbar from '@/components/AdminNavbar.vue'
+import PatientsTable from '@/components/PatientsTable.vue'
+import axios from '@/plugins/axios'
 
-  
 export default {
   name: 'App',
   components: {
     Footer,
     AdminNavbar,
     HospitalTable,
+    PatientsTable,
     //SyncDialog,
   },
-
   data() {
-    this.hospitals = hospitalsData.hospitals;
-    this.items = [
-      {
-        title: 'Hospitals',
-        icon: 'mdi-hospital-building',
-        route: '/AdminPage',
-        count: this.hospitals.length,
-      },
-      {
-        title: 'Doctors',
-        icon: 'mdi-doctor',
-        route: '/doctors',
-        count: doctorsData.length,
-      },
-      {
-        title: 'Patients',
-        icon: 'mdi-account-group',
-        route: '/patients',
-        count: patientsData.length,
-      },
-    ];
+    return {
+      drawer: true,
+      hospitals: [],
+      doctors: [],
+      patients: [],
+      items: [
+        {
+          title: 'Hospitals',
+          icon: 'mdi-hospital-building',
+          route: '/AdminPage',
+          count: 0,
+        },
+        {
+          title: 'Doctors',
+          icon: 'mdi-doctor',
+          route: '/doctors',
+          count: 0,
+        },
+        {
+          title: 'Patients',
+          icon: 'mdi-account-group',
+          route: '/patients',
+          count: 0,
+        },
+      ],
+    };
+  },
+  mounted() {
+    this.fetchHospitals();
+    this.fetchDoctors();
+    this.fetchPatients();
+  },
+  methods: {
+    async fetchHospitals() {
+      try {
+        const res = await axios.get('/hospitals');
+        this.hospitals = Array.isArray(res.data) ? res.data : (res.data.hospitals || []);
+        this.items[0].count = this.hospitals.length;
+      } catch (e) {
+        console.error('Failed to fetch hospitals', e);
+      }
+    },
+    async fetchDoctors() {
+      try {
+        const res = await axios.get('/doctors');
+        this.doctors = res.data;
+        this.items[1].count = this.doctors.length;
+      } catch (e) {
+        console.error('Failed to fetch doctors', e);
+      }
+    },
+    async fetchPatients() {
+      try {
+        const res = await axios.get('/patients');
+        this.patients = res.data.map(patient => ({
+          ...patient,
+          chronic: patient.healthConditions?.chronic || '',
+          medications: patient.healthConditions?.medications || '',
+          allergies: patient.healthConditions?.allergies || '',
+        }));
+        this.items[2].count = this.patients.length;
+      } catch (e) {
+        console.error('Failed to fetch patients', e);
+      }
+    },
   },
 };
 </script>

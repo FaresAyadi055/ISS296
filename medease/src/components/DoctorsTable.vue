@@ -95,11 +95,16 @@
 </template>
 
 <script>
-import doctorsData from '@/repos/doctors.json';
 const defaultItem = { name: '', specialty: '', location: '', phone: '', email: '', rating: 0 };
 
 export default {
   name: 'DoctorsTable',
+  props: {
+    doctors: {
+      type: Array,
+      default: () => [],
+    },
+  },
   data() {
     return {
       search: '',
@@ -117,7 +122,6 @@ export default {
         { title: 'Rating', key: 'rating' },
         { title: 'Actions', key: 'actions', sortable: false },
       ],
-      doctors: doctorsData.doctors,
     };
   },
   computed: {

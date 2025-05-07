@@ -2,8 +2,13 @@
   <v-card flat>
     <v-card-title>
       Hospitals Database
-      <v-spacer></v-spacer>
-      <v-btn color="primary" dark small @click="openDialog">
+      <v-spacer />
+      <v-btn 
+        color="primary"
+        dark
+        small
+        @click="openDialog"
+      >
         <v-icon left>mdi-plus</v-icon>
         Add
       </v-btn>
@@ -17,7 +22,7 @@
         variant="outlined"
         hide-details
         single-line
-      ></v-text-field>
+      />
     </v-card-text>
 
     <v-data-table
@@ -26,9 +31,20 @@
       :search="search"
       class="elevation-1"
     >
-      <template #item.actions="{ item }">
-        <v-icon small class="mr-2" @click="editItem(item)">mdi-pencil</v-icon>
-        <v-icon small @click="confirmDelete(item)">mdi-delete</v-icon>
+      <template v-slot:item.actions="{ item }">
+        <v-icon 
+          small 
+          class="mr-2" 
+          @click="editItem(item)"
+        >
+          mdi-pencil
+        </v-icon>
+        <v-icon 
+          small 
+          @click="confirmDelete(item)"
+        >
+          mdi-delete
+        </v-icon>
       </template>
     </v-data-table>
 
@@ -42,28 +58,28 @@
           <v-container>
             <v-row>
               <v-col cols="12" sm="6">
-                <v-text-field v-model="editedItem.name" label="Hospital Name"></v-text-field>
+                <v-text-field v-model="editedItem.name" label="Hospital Name" />
               </v-col>
               <v-col cols="12" sm="6">
-                <v-text-field v-model="editedItem.type" label="Type"></v-text-field>
+                <v-text-field v-model="editedItem.type" label="Type" />
               </v-col>
               <v-col cols="12">
-                <v-text-field v-model="editedItem.address" label="Address"></v-text-field>
+                <v-text-field v-model="editedItem.address" label="Address" />
               </v-col>
               <v-col cols="12" sm="6">
-                <v-text-field v-model="editedItem.phone" label="Phone"></v-text-field>
+                <v-text-field v-model="editedItem.phone" label="Phone" />
               </v-col>
               <v-col cols="12" sm="6">
-                <v-text-field v-model="editedItem.latitude" label="Latitude"></v-text-field>
+                <v-text-field v-model="editedItem.latitude" label="Latitude" />
               </v-col>
               <v-col cols="12" sm="6">
-                <v-text-field v-model="editedItem.longitude" label="Longitude"></v-text-field>
+                <v-text-field v-model="editedItem.longitude" label="Longitude" />
               </v-col>
             </v-row>
           </v-container>
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
+          <v-spacer />
           <v-btn text @click="closeDialog">Cancel</v-btn>
           <v-btn text @click="saveItem">Save</v-btn>
         </v-card-actions>
@@ -73,8 +89,12 @@
     <!-- Delete Confirmation Dialog -->
     <v-dialog v-model="dialogDelete" max-width="400px">
       <v-card>
-        <v-card-title class="text-h5">Confirm Delete</v-card-title>
-        <v-card-text>Are you sure you want to delete this hospital?</v-card-text>
+        <v-card-title class="text-h5">
+          Confirm Delete
+        </v-card-title>
+        <v-card-text>
+          Are you sure you want to delete this hospital?
+        </v-card-text>
         <v-card-actions>
           <v-spacer />
           <v-btn text @click="closeDelete">Cancel</v-btn>
@@ -82,19 +102,23 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-
   </v-card>
 </template>
 
 <script>
-import hospitalsData from '@/repos/hospitals.json';
+import axios from '@/plugins/axios';
 
 const defaultItem = { name: '', type: '', address: '', phone: '', latitude: '', longitude: '' };
 
 export default {
+  props: {
+    hospitals: {
+      type: Array,
+      default: () => [],
+    },
+  },
   data() {
     return {
-      drawer: true,
       search: '',
       dialog: false,
       dialogDelete: false,
@@ -110,15 +134,6 @@ export default {
         { key: 'longitude', title: 'Longitude', sortable: true },
         { key: 'actions', title: 'Actions', sortable: false },
       ],
-      hospitals: hospitalsData.hospitals.map(hospital => ({
-        name: hospital.name,
-        type: hospital.type,
-        address: hospital.address,
-        phone: hospital.phone,
-        latitude: hospital.latitude.toString(),
-        longitude: hospital.longitude.toString()
-      })),
-      items: [],
     };
   },
   methods: {
@@ -135,11 +150,17 @@ export default {
     closeDialog() {
       this.dialog = false;
     },
-    saveItem() {
+    async saveItem() {
       if (this.editedIndex > -1) {
+        // Optionally implement edit (PUT) here
         Object.assign(this.hospitals[this.editedIndex], this.editedItem);
       } else {
-        this.hospitals.push(Object.assign({}, this.editedItem));
+        try {
+          await axios.post('/api/hospitals', this.editedItem);
+          // Optionally emit event to parent to refresh hospitals
+        } catch (e) {
+          console.error('Failed to add hospital', e);
+        }
       }
       this.closeDialog();
     },
