@@ -170,7 +170,7 @@ const handleBooking = (doctorId) => {
     const patientData = JSON.parse(currentPatient);
     sessionStorage.setItem('currentPatient', patientData.id);
   }
-  router.push(`/BookingPage/${doctorId}`);
+  router.push(`/bookingPagePatient/${doctorId}`);
 };
 
 const filteredDoctors = computed(() => {

@@ -63,6 +63,14 @@ const router = createRouter({
       path: '/doctor/profile/:id',
       name: 'DoctorProfile',
       component: () => import('@/pages/doctorProfile.vue')
+    },
+    {
+      path: '/bookingPage/:doctorId',
+      component: () => import('@/pages/BookingPage.vue')
+    },
+    {
+      path: '/bookingPagePatient/:doctorId',
+      component: () => import('@/pages/BookingPage.vue')
     }
   ]),
 })
