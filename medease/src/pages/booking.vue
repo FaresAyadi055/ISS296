@@ -161,9 +161,9 @@ const isUserLoggedIn = () => {
 // Function to handle booking button click
 const handleBooking = (doctorId) => {
   if (isUserLoggedIn()) {
-    router.push(`/booking/${doctorId}`);
+    router.push(`/bookingPage/${doctorId}`);
   } else {
-    sessionStorage.setItem('bookingRedirect', `/booking/${doctorId}`);
+    sessionStorage.setItem('bookingRedirect', `/bookingPage/${doctorId}`);
     router.push('/signIn');
   }
 };

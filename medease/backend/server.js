@@ -442,27 +442,39 @@ app.get('/api/doctors', async (req, res) => {
 // Add this route to handle chatbot doctor queries
 app.post('/api/chatbot/doctors', async (req, res) => {
   try {
-    const { specialty } = req.body;
-    console.log('Received doctor query request:', { specialty });
-    
+    const { specialty, day, time } = req.body;
     let query = {};
-    
-    if (specialty) {
-      // Use exact match for specialty
-      query.specialty = specialty;
-      console.log('Searching with query:', query);
-    } else {
-      console.log('No specialty provided, returning all doctors');
+    if (specialty) query.specialty = specialty;
+
+    // Get all doctors with the specialty
+    let doctors = await Doctor.find(query);
+
+    // If day and time are provided, filter for availability
+    if (day && time) {
+      // Get all appointments for that day/time
+      const appointments = await Appointment.find({ day, time });
+      const bookedDoctorIds = appointments.map(a => a.doctorId.toString());
+
+      // Filter doctors who have a working slot at that day/time and are not booked
+      doctors = doctors.filter(doc => {
+        const slots = (doc.workingHours?.[day] || []);
+        const hasSlot = slots.some(slot => {
+          // Check if time is within slot
+          const start = slot.startTime;
+          const end = slot.endTime;
+          return time >= start && time < end;
+        });
+        return hasSlot && !bookedDoctorIds.includes(doc._id.toString());
+      });
     }
-    
-    const doctors = await Doctor.find(query).select('firstName lastName specialty _id');
-    console.log('Found doctors:', doctors);
-    console.log('Number of doctors found:', doctors.length);
-    
-    res.json(doctors);
+
+    res.json(doctors.map(doc => ({
+      _id: doc._id,
+      firstName: doc.firstName,
+      lastName: doc.lastName,
+      specialty: doc.specialty
+    })));
   } catch (error) {
-    console.error('Error fetching doctors for chatbot:', error);
-    console.error('Error stack:', error.stack);
     res.status(500).json({ message: 'Error fetching doctors' });
   }
 });

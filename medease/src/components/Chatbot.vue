@@ -125,6 +125,33 @@ const specialtyKeywords = {
 // List of all keywords from specialtyKeywords
 const specialtyKeywordsList = Object.keys(specialtyKeywords);
 
+// Add these helper arrays for day parsing
+const daysOfWeek = [
+  'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'
+];
+
+const parseDayAndTime = (message) => {
+  const lower = message.toLowerCase();
+  let day = null;
+  let time = null;
+
+  // Find day
+  for (const d of daysOfWeek) {
+    if (lower.includes(d)) {
+      day = d;
+      break;
+    }
+  }
+
+  // Find time (format: HH:MM or H:MM)
+  const timeMatch = lower.match(/([01]?[0-9]|2[0-3]):[0-5][0-9]/);
+  if (timeMatch) {
+    time = timeMatch[0];
+  }
+
+  return { day, time };
+};
+
 // Function to send a message
 const sendMessage = async () => {
   if (!newMessage.value.trim() || isLoading.value) return
@@ -180,18 +207,21 @@ const handleDoctorQuery = async (message) => {
       }
     }
     
+    // Parse day and time
+    const { day, time } = parseDayAndTime(message);
+
     // Fetch doctors from backend
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
     console.log('Sending request to:', `${apiUrl}/api/chatbot/doctors`)
-    console.log('Request payload:', { specialty })
+    console.log('Request payload:', { specialty, day, time })
     
-    const response = await axios.post(`${apiUrl}/api/chatbot/doctors`, { specialty })
+    const response = await axios.post(`${apiUrl}/api/chatbot/doctors`, { specialty, day, time })
     console.log('Backend response:', response.data)
     
     if (response.data && response.data.length > 0) {
-      const specialtyText = specialty ? `in ${specialty}` : ''
+      const details = [specialty, day, time].filter(Boolean).join(', ');
       messages.value.push({
-        text: `Here are the available doctors ${specialtyText}:`,
+        text: `Here are the available doctors${details ? ' for ' + details : ''}:`,
         sender: 'bot',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         type: 'doctors',
