@@ -18,7 +18,23 @@
           :class="['message', message.sender]"
         >
           <div class="message-content">
-            {{ message.text }}
+            <div v-if="message.type === 'text'">{{ message.text }}</div>
+            <div v-else-if="message.type === 'doctors'" class="doctors-list">
+              <div v-for="doctor in message.doctors" :key="doctor._id" class="doctor-item">
+                <div class="doctor-info">
+                  <strong>Dr. {{ doctor.firstName }} {{ doctor.lastName }}</strong>
+                  <div class="specialty">{{ doctor.specialty }}</div>
+                </div>
+                <v-btn
+                  size="small"
+                  color="primary"
+                  @click="goToBooking(doctor._id)"
+                  class="booking-btn"
+                >
+                  Book Appointment
+                </v-btn>
+              </div>
+            </div>
           </div>
           <div class="message-time">
             {{ message.time }}
@@ -54,22 +70,60 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, watch } from 'vue'
 import { API_CONFIG } from '@/config/api'
 import axios from 'axios'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 // Chat state
 const showChat = ref(false)
-const messages = ref([
-  {
-    text: 'Hello! I am your MedEase assistant. How can I help you today?',
-    sender: 'bot',
-    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  }
-])
+const messages = ref(
+  JSON.parse(localStorage.getItem('medease_chat_history')) || [
+    {
+      text: 'Hello! I am your MedEase assistant. How can I help you today?',
+      sender: 'bot',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      type: 'text'
+    }
+  ]
+)
 const newMessage = ref('')
 const chatContainer = ref(null)
 const isLoading = ref(false)
+
+// Specialty keywords
+const specialtyKeywords = {
+  'cardiologist': 'Cardiologist',
+  'cardiology': 'Cardiologist',
+  'heart': 'Cardiologist',
+  'pediatrician': 'Pediatrician',
+  'pediatrics': 'Pediatrician',
+  'pediatric': 'Pediatrician',
+  'dermatologist': 'Dermatologist',
+  'dermatology': 'Dermatologist',
+  'skin': 'Dermatologist',
+  'neurologist': 'Neurologist',
+  'neurology': 'Neurologist',
+  'brain': 'Neurologist',
+  'endocrinologist': 'Endocrinologist',
+  'endocrinology': 'Endocrinologist',
+  'hormone': 'Endocrinologist',
+  'ophthalmologist': 'Ophthalmologist',
+  'ophthalmology': 'Ophthalmologist',
+  'eye': 'Ophthalmologist',
+  'psychiatrist': 'Psychiatrist',
+  'psychiatry': 'Psychiatrist',
+  'mental': 'Psychiatrist',
+  'gastroenterologist': 'Gastroenterologist',
+  'gastroenterology': 'Gastroenterologist',
+  'stomach': 'Gastroenterologist',
+  'digestive': 'Gastroenterologist'
+}
+
+// List of all keywords from specialtyKeywords
+const specialtyKeywordsList = Object.keys(specialtyKeywords);
 
 // Function to send a message
 const sendMessage = async () => {
@@ -79,7 +133,8 @@ const sendMessage = async () => {
   messages.value.push({
     text: newMessage.value,
     sender: 'user',
-    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    type: 'text'
   })
 
   const userMessage = newMessage.value
@@ -89,26 +144,93 @@ const sendMessage = async () => {
   await nextTick()
   scrollToBottom()
 
-  // Get AI response
-  isLoading.value = true
+  // List of all keywords from specialtyKeywords
+  const lowerUserMessage = userMessage.toLowerCase();
+  const matchesSpecialty = specialtyKeywordsList.some(keyword => lowerUserMessage.includes(keyword));
+
+  if (
+    lowerUserMessage.includes('doctor') ||
+    lowerUserMessage.includes('find') ||
+    lowerUserMessage.includes('available') ||
+    matchesSpecialty
+  ) {
+    await handleDoctorQuery(userMessage)
+  } else {
+    await getAIResponse(userMessage)
+  }
+}
+
+// Function to handle doctor queries
+const handleDoctorQuery = async (message) => {
   try {
-    const response = await getAIResponse(userMessage)
-    messages.value.push({
-      text: response,
-      sender: 'bot',
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    })
+    isLoading.value = true
+    console.log('Processing doctor query:', message)
+    
+    // Convert message to lowercase for better matching
+    const lowerMessage = message.toLowerCase()
+    console.log('Lowercase message:', lowerMessage)
+    
+    // Find matching specialty
+    let specialty = null
+    for (const [keyword, specialtyValue] of Object.entries(specialtyKeywords)) {
+      if (lowerMessage.includes(keyword)) {
+        specialty = specialtyValue
+        console.log('Found matching specialty:', specialty)
+        break
+      }
+    }
+    
+    // Fetch doctors from backend
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+    console.log('Sending request to:', `${apiUrl}/api/chatbot/doctors`)
+    console.log('Request payload:', { specialty })
+    
+    const response = await axios.post(`${apiUrl}/api/chatbot/doctors`, { specialty })
+    console.log('Backend response:', response.data)
+    
+    if (response.data && response.data.length > 0) {
+      const specialtyText = specialty ? `in ${specialty}` : ''
+      messages.value.push({
+        text: `Here are the available doctors ${specialtyText}:`,
+        sender: 'bot',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        type: 'doctors',
+        doctors: response.data
+      })
+    } else {
+      const noResultsMessage = specialty 
+        ? `I couldn't find any ${specialty} specialists available at the moment. Please try a different specialty or check back later.`
+        : 'I couldn\'t find any doctors matching your criteria. Please try specifying a specialty or check back later.'
+      
+      messages.value.push({
+        text: noResultsMessage,
+        sender: 'bot',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        type: 'text'
+      })
+    }
   } catch (error) {
-    console.error('Error getting AI response:', error)
+    console.error('Error fetching doctors:', error)
+    console.error('Error details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    })
     messages.value.push({
-      text: 'I apologize, but I encountered an error. Please try again later.',
+      text: 'I apologize, but I encountered an error while searching for doctors. Please try again later.',
       sender: 'bot',
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      type: 'text'
     })
   } finally {
     isLoading.value = false
     scrollToBottom()
   }
+}
+
+// Function to navigate to booking page
+const goToBooking = (doctorId) => {
+  router.push(`/bookingPage/${doctorId}`)
 }
 
 // Function to get AI response
@@ -182,6 +304,23 @@ const scrollToBottom = () => {
   if (chatContainer.value) {
     chatContainer.value.scrollTop = chatContainer.value.scrollHeight
   }
+}
+
+// Save chat history to localStorage whenever it changes
+watch(messages, (newMessages) => {
+  localStorage.setItem('medease_chat_history', JSON.stringify(newMessages));
+}, { deep: true });
+
+const clearChat = () => {
+  messages.value = [
+    {
+      text: 'Hello! I am your MedEase assistant. How can I help you today?',
+      sender: 'bot',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      type: 'text'
+    }
+  ];
+  localStorage.removeItem('medease_chat_history');
 }
 
 onMounted(() => {
@@ -307,5 +446,38 @@ onMounted(() => {
 .chatbot-open .chat-content {
   opacity: 1;
   height: calc(100% - 48px);
+}
+
+.doctors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.doctor-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.doctor-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.specialty {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.booking-btn {
+  font-size: 0.75rem;
+  text-transform: none;
 }
 </style> 

@@ -430,6 +430,34 @@ app.get('/api/doctors', async (req, res) => {
   }
 });
 
+// Add this route to handle chatbot doctor queries
+app.post('/api/chatbot/doctors', async (req, res) => {
+  try {
+    const { specialty } = req.body;
+    console.log('Received doctor query request:', { specialty });
+    
+    let query = {};
+    
+    if (specialty) {
+      // Use exact match for specialty
+      query.specialty = specialty;
+      console.log('Searching with query:', query);
+    } else {
+      console.log('No specialty provided, returning all doctors');
+    }
+    
+    const doctors = await Doctor.find(query).select('firstName lastName specialty _id');
+    console.log('Found doctors:', doctors);
+    console.log('Number of doctors found:', doctors.length);
+    
+    res.json(doctors);
+  } catch (error) {
+    console.error('Error fetching doctors for chatbot:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ message: 'Error fetching doctors' });
+  }
+});
+
 // Add this route to fetch a single doctor by ID
 app.get('/api/doctors/:id', async (req, res) => {
   try {
