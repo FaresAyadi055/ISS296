@@ -541,6 +541,19 @@ app.get('/api/hospitals', async (req, res) => {
   }
 });
 
+// Add this route to add a new hospital
+app.post('/api/hospitals', async (req, res) => {
+  try {
+    const { name, type, address, phone } = req.body;
+    // Optionally, you can add latitude/longitude if needed
+    const hospital = new Hospital({ name, type, address, phone });
+    await hospital.save();
+    res.status(201).json(hospital);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
 // Get all medications
 app.get('/api/medications', async (req, res) => {
   try {
@@ -559,6 +572,44 @@ app.post('/api/medications', async (req, res) => {
     res.status(201).json(med);
   } catch (error) {
     res.status(400).json({ message: error.message });
+  }
+});
+
+// Delete a medication by ID
+app.delete('/api/medications/:id', async (req, res) => {
+  try {
+    await Medication.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Medication deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// --- DELETE ROUTES FOR ADMIN ---
+app.delete('/api/patients/:id', async (req, res) => {
+  try {
+    await Patient.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Patient deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.delete('/api/doctors/:id', async (req, res) => {
+  try {
+    await Doctor.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Doctor deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.delete('/api/hospitals/:id', async (req, res) => {
+  try {
+    await Hospital.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Hospital deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 });
 
