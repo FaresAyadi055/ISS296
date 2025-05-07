@@ -15,6 +15,15 @@
               Connect with trusted healthcare professionals anytime,<br>
               anywhere with our easy-to-use web application
             </p>
+            <v-btn
+              color="primary"
+              size="large"
+              class="mr-4"
+              @click="router.push('/pharmacy')"
+            >
+              <v-icon start>mdi-pharmacy</v-icon>
+              Visit Pharmacy
+            </v-btn>
           </v-col>
 
           <v-col cols="12" md="6">

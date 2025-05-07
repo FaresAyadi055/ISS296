@@ -15,6 +15,15 @@
               Connect with trusted healthcare professionals anytime,<br>
               anywhere with our easy-to-use web application
             </p>
+            <v-btn
+              color="primary"
+              size="large"
+              class="mr-4"
+              @click="router.push('/pharmacy')"
+            >
+              <v-icon start>mdi-pharmacy</v-icon>
+              Visit Pharmacy
+            </v-btn>
           </v-col>
 
           <v-col cols="12" md="6">
@@ -150,6 +159,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import NavBar from '@/components/navbarAuthPatient.vue'
 import Footer from '@/components/footer.vue'
 import Chatbot from '@/components/Chatbot.vue'
@@ -158,6 +168,8 @@ import heartIcon from '@/assets/heart-icon.png'
 import calendarIcon from '@/assets/calendar-icon.png'
 import axios from 'axios'
 import { API_CONFIG } from '@/config/api'
+
+const router = useRouter()
 
 // Daily quote state
 const dailyQuote = ref('')

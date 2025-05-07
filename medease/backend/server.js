@@ -95,6 +95,18 @@ const Doctor = mongoose.model('Doctor', doctorSchema);
 const Patient = mongoose.model('Patient', patientSchema);
 const Hospital = mongoose.model('Hospital', hospitalSchema);
 
+// Medication Schema
+const medicationSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  category: { type: String, required: true },
+  description: String,
+  price: Number,
+  dosage: String,
+  sideEffects: String,
+  image: String
+});
+const Medication = mongoose.model('Medication', medicationSchema);
+
 // Authentication Middleware
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
@@ -526,6 +538,27 @@ app.get('/api/hospitals', async (req, res) => {
     res.json(hospitals);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching hospitals' });
+  }
+});
+
+// Get all medications
+app.get('/api/medications', async (req, res) => {
+  try {
+    const meds = await Medication.find();
+    res.json(meds);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching medications' });
+  }
+});
+
+// (Optional) Add a route to add a medication (for testing)
+app.post('/api/medications', async (req, res) => {
+  try {
+    const med = new Medication(req.body);
+    await med.save();
+    res.status(201).json(med);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
   }
 });
 
