@@ -10,15 +10,24 @@
         <leaflet-map :center="mapCenter" :zoom="mapZoom" :markers="mapMarkers" />
       </v-container>
   
-      <Navbar />
+      <navbar-auth-patient v-if="isUserLoggedIn()" />
+      <navbar v-else />
       <Footer />
     </v-app>
   </template>
   
   <script setup>
-  import Navbar from '@/components/navbarpatient.vue'
+  import Navbar from '@/components/navbar.vue'
+  import NavbarAuthPatient from '@/components/navbarAuthPatient.vue'
   import Footer from '@/components/footer.vue'
   import LeafletMap from '@/components/LeafletMap.vue'
+  
+  // Function to check if patient is logged in
+  const isUserLoggedIn = () => {
+    const token = localStorage.getItem('token');
+    const patient = localStorage.getItem('patient');
+    return !!(token && patient);
+  };
   </script>
   
   <script>
@@ -26,6 +35,9 @@
     name: 'App',
     components: {
       LeafletMap,
+      Navbar,
+      NavbarAuthPatient,
+      Footer,
     },
     data() {
       return {
