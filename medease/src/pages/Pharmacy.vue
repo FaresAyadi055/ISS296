@@ -33,6 +33,7 @@
                 hide-details
                 style="color: #1e3a8a;"
                 input-class="pharmacy-search-input"
+                :menu-props="{ contentClass: 'category-menu' }"
               ></v-select>
             </v-card>
 
@@ -363,6 +364,22 @@ const removeFromCart = (medicationId) => {
 }
 
 .pharmacy-search-input {
+  color: #1e3a8a !important;
+}
+
+:deep(.category-menu),
+:deep(.category-menu .v-list),
+:deep(.category-menu .v-list-item) {
+  background-color: white !important;
+  color: #1e3a8a !important;
+}
+</style>
+
+<style>
+.category-menu,
+.category-menu .v-list,
+.category-menu .v-list-item {
+  background-color: white !important;
   color: #1e3a8a !important;
 }
 </style> 
