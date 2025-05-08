@@ -86,6 +86,20 @@
           </v-card>
         </v-dialog>
 
+        <!-- Payment Choice Dialog -->
+        <v-dialog v-model="paymentDialog" max-width="400px">
+          <v-card class="custom-dialog-card">
+            <v-card-title class="headline text-center">Would you like to pay online?</v-card-title>
+            <v-card-text class="text-center">
+              <p class="font-weight-medium text-blue">You can pay for your appointment now or later at the clinic.</p>
+            </v-card-text>
+            <v-card-actions class="d-flex justify-center">
+              <v-btn @click="goToPayment" color="blue" class="custom-btn">Yes, Pay Online</v-btn>
+              <v-btn @click="skipPayment" color="grey" class="custom-btn">No, Pay Later</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
         <!-- Success Booking Confirmation Dialog -->
         <v-dialog v-model="successDialog" max-width="400px">
           <v-card class="custom-dialog-card">
@@ -140,6 +154,7 @@ const currentWeek = ref(new Date());
 // Dialogs and selected time slot
 const dialog = ref(false);
 const successDialog = ref(false);
+const paymentDialog = ref(false); // New dialog for payment choice
 const dialogTitle = ref('');
 const dialogMessage = ref('');
 const selectedTime = ref('');
@@ -381,7 +396,7 @@ async function bookTime() {
     allBookings.value.push(newBooking);
 
     dialog.value = false;
-    successDialog.value = true;
+    paymentDialog.value = true; // Show payment choice dialog
     selectedTime.value = '';
   } catch (error) {
     console.error('Error booking appointment:', error);
@@ -397,6 +412,22 @@ async function bookTime() {
     dialog.value = true;
     await fetchAppointments();
   }
+}
+
+// Redirect to payment page
+function goToPayment() {
+  // Find the latest booking (the one just made)
+  const latestBooking = userBookings.value[userBookings.value.length - 1];
+  paymentDialog.value = false;
+  if (latestBooking && latestBooking.id) {
+    router.push(`/paymentPage?appointmentId=${latestBooking.id}`);
+  }
+}
+
+// Skip payment and show success dialog
+function skipPayment() {
+  paymentDialog.value = false;
+  successDialog.value = true;
 }
 
 // Close the success dialog
