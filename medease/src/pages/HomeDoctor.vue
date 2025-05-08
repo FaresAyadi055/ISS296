@@ -260,10 +260,10 @@ const fetchDailyQuote = async () => {
     if (response.data && response.data.choices && response.data.choices[0].message) {
       dailyQuote.value = response.data.choices[0].message.content.trim()
     } else {
-      quoteError.value = 'Could not load quote.'
+      quoteError.value = 'Every patient is a story, and every caregiver is a chapter of hope.'
     }
   } catch (e) {
-    quoteError.value = 'Could not load quote.'
+    quoteError.value = 'Every patient is a story, and every caregiver is a chapter of hope.'
   } finally {
     quoteLoading.value = false
   }
