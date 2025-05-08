@@ -187,23 +187,64 @@ const detectMedicationQuery = (message) => {
   return null;
 };
 
+function extractMedicationAvailabilityName(message) {
+  const lower = message.toLowerCase().trim();
+  // Only match AVAILABILITY patterns, not "what is", "symptoms of", etc.
+  // e.g. "is doliprane available", "do you have doliprane", "can I buy doliprane"
+  if (
+    lower.match(/^is\s+[a-z0-9\s\-]+(\s+available)?\??$/) ||
+    lower.match(/^do you have\s+[a-z0-9\s\-]+\??$/) ||
+    lower.match(/^can i buy\s+[a-z0-9\s\-]+\??$/) ||
+    lower.match(/^get\s+[a-z0-9\s\-]+\??$/) ||
+    lower.match(/^need\s+[a-z0-9\s\-]+\??$/) ||
+    lower.match(/^want\s+[a-z0-9\s\-]+\??$/) ||
+    lower.match(/^order\s+[a-z0-9\s\-]+\??$/) ||
+    lower.match(/^purchase\s+[a-z0-9\s\-]+\??$/) ||
+    lower.match(/^add\s+[a-z0-9\s\-]+\??$/) ||
+    lower.match(/^available\s+[a-z0-9\s\-]+\??$/)
+  ) {
+    // Extract the medication name from the pattern
+    const match = lower.match(/(?:is|do you have|can i buy|get|need|want|order|purchase|add|available)\s+([a-z0-9\s\-]+?)(?:\s+available|\?|$)/);
+    if (match && match[1]) {
+      return match[1].trim();
+    }
+  }
+  return null;
+}
+
 const medicalKeywords = [
   'medicine', 'medication', 'pharmacy', 'doctor', 'health', 'symptom', 'treatment', 'prescription',
   'pain', 'illness', 'disease', 'appointment', 'clinic', 'hospital', 'pill', 'tablet', 'capsule',
   'side effect', 'dose', 'diagnosis', 'therapy', 'order', 'buy', 'purchase', 'pharmacist', 'refill',
+  'infection', 'virus', 'bacteria', 'cancer', 'diabetes', 'asthma', 'allergy', 'fever', 'cough',
+  'headache', 'definition', 'explain', 'meaning', 'what is', 'symptoms', 'causes', 'treatment',
+  'prevention', 'risk', 'signs', 'medical', 'term', 'disease', 'condition', 'specialist', 'emergency',
+  'blood', 'pressure', 'sugar', 'cholesterol', 'vaccine', 'immunization', 'test', 'scan', 'x-ray',
+  'MRI', 'CT', 'ultrasound', 'surgery', 'operation', 'procedure', 'medicine name', 'drug', 'tablet',
+  'capsule', 'ointment', 'cream', 'dose', 'dosage', 'overdose', 'side effect', 'contraindication',
   // add more as needed
 ];
 
 function isMedicalQuestion(message) {
   const lower = message.toLowerCase();
-  return medicalKeywords.some(keyword => lower.includes(keyword));
+  // Check for medical keywords
+  if (medicalKeywords.some(keyword => lower.includes(keyword))) return true;
+  // Check for common medical question patterns
+  if (
+    lower.match(/what is [a-z ]+\??/) ||
+    lower.match(/symptoms of [a-z ]+\??/) ||
+    lower.match(/causes of [a-z ]+\??/) ||
+    lower.match(/treatment for [a-z ]+\??/) ||
+    lower.match(/can i take [a-z ]+\??/) ||
+    lower.match(/is [a-z ]+ dangerous\??/)
+  ) return true;
+  return false;
 }
 
 // Function to send a message
 const sendMessage = async () => {
   if (!newMessage.value.trim() || isLoading.value) return;
 
-  // Add user message
   messages.value.push({
     text: newMessage.value,
     sender: 'user',
@@ -214,29 +255,27 @@ const sendMessage = async () => {
   const userMessage = newMessage.value;
   newMessage.value = '';
 
-  // Detect medication queries (improved)
+  // 1. Medication query (by name in list, and AVAILABILITY pattern)
   const medName = detectMedicationQuery(userMessage);
   if (medName) {
     await handleMedicationQuery(medName);
     return;
   }
 
-  // Scroll to bottom
-  await nextTick()
-  scrollToBottom()
-
-  // List of all keywords from specialtyKeywords
+  // 2. Doctor/specialty query
   const lowerUserMessage = userMessage.toLowerCase();
   const matchesSpecialty = specialtyKeywordsList.some(keyword => lowerUserMessage.includes(keyword));
-
   if (
     lowerUserMessage.includes('doctor') ||
     lowerUserMessage.includes('find') ||
-    lowerUserMessage.includes('available') ||
     matchesSpecialty
   ) {
     await handleDoctorQuery(userMessage)
-  } else if (isMedicalQuestion(userMessage)) {
+    return;
+  }
+
+  // 3. General medical question (definition, symptoms, etc.)
+  if (isMedicalQuestion(userMessage)) {
     const aiResponse = await getAIResponse(userMessage)
     messages.value.push({
       text: aiResponse,
@@ -245,15 +284,35 @@ const sendMessage = async () => {
       type: 'text'
     })
     scrollToBottom()
-  } else {
-    messages.value.push({
-      text: "I'm sorry, I can only assist with medical and pharmacy-related questions.",
-      sender: 'bot',
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      type: 'text'
-    })
-    scrollToBottom()
+    return;
   }
+
+  // 4. Medication availability query (by AVAILABILITY pattern, not in list)
+  const extractedMed = extractMedicationAvailabilityName(userMessage);
+  if (extractedMed) {
+    if (medicationNames.value.includes(extractedMed.toLowerCase())) {
+      await handleMedicationQuery(extractedMed);
+      return;
+    } else {
+      messages.value.push({
+        text: `Sorry, ${extractedMed} is not available for now in our pharmacy.`,
+        sender: 'bot',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        type: 'text'
+      });
+      scrollToBottom();
+      return;
+    }
+  }
+
+  // 5. Not recognized
+  messages.value.push({
+    text: "I'm a medical assistant and can only answer medical and pharmacy-related questions.",
+    sender: 'bot',
+    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    type: 'text'
+  })
+  scrollToBottom()
 }
 
 // Function to handle doctor queries
@@ -343,7 +402,7 @@ const getAIResponse = async (message) => {
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful medical assistant for MedEase. Provide clear, concise, and accurate information about healthcare, appointments, and medical services. Always be professional and empathetic.'
+            content: 'You are a helpful and knowledgeable medical assistant for MedEase. Answer any question related to medicine, symptoms, diseases, definitions of medical terms, treatments, and pharmacy. If the question is not medical, politely refuse to answer.'
           },
           {
             role: 'user',
@@ -458,7 +517,7 @@ const handleMedicationQuery = async (medName) => {
         });
       } else {
         messages.value.push({
-          text: `Sorry, ${medName} is not available at the moment in our pharmacy.`,
+          text: `Sorry, ${medName} is not available for now in our pharmacy.`,
           sender: 'bot',
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           type: 'text'
@@ -466,7 +525,7 @@ const handleMedicationQuery = async (medName) => {
       }
     } else {
       messages.value.push({
-        text: `Sorry, I couldn't find ${medName} in our pharmacy.`,
+        text: `Sorry, ${medName} is not available for now in our pharmacy.`,
         sender: 'bot',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         type: 'text'
