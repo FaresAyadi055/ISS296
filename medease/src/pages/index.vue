@@ -266,7 +266,7 @@ const fetchDailyQuote = async () => {
       console.error('Daily quote API: Unexpected response format', response.data)
     }
   } catch (e) {
-    quoteError.value = 'Could not load quote.'
+    quoteError.value = 'Every patient is a story, and every caregiver is a chapter of hope.'
     if (e.response) {
       // Server responded with a status code outside 2xx
       console.error('Daily quote API error:', e.response.status, e.response.data)
