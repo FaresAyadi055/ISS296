@@ -7,6 +7,9 @@
         <v-card class="pa-8 payment-card" max-width="440" elevation="12">
           <v-card-title class="headline text-center mb-2" style="color: #1976D2; font-weight: 700; letter-spacing: 0.02em;">Pay for Your Appointment</v-card-title>
           <v-card-subtitle class="text-center mb-4" style="color: #607D8B; font-size: 1.1rem;">Secure payment powered by Medease</v-card-subtitle>
+          <div class="text-center mb-4" style="font-size: 1.2rem; font-weight: 600; color: #1976D2;">
+            Amount: 80 TND
+          </div>
           <v-divider class="mb-4"></v-divider>
           <v-form ref="form" v-model="valid" lazy-validation>
             <v-text-field
