@@ -107,7 +107,8 @@ const medicationSchema = new mongoose.Schema({
   price: Number,
   dosage: String,
   sideEffects: String,
-  image: String
+  image: String,
+  stock: { type: Number, default: 10 } // <-- Added stock field
 });
 const Medication = mongoose.model('Medication', medicationSchema);
 
@@ -772,12 +773,12 @@ app.post('/api/orders', async (req, res) => {
     const order = new Order(req.body);
     await order.save();
 
-    // Decrement stock for each medication in the order
+    // Decrement stock for each medication in the order by the quantity purchased
     for (const item of order.items) {
       console.log('Decrementing stock for:', item.medicationId, 'by', item.quantity);
       const med = await Medication.findByIdAndUpdate(
         item.medicationId,
-        { $inc: { stock: -item.quantity } },
+        { $inc: { stock: -item.quantity } }, // Decrement by quantity
         { new: true }
       );
       console.log('Updated medication:', med);
