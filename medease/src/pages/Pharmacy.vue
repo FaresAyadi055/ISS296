@@ -225,7 +225,7 @@
                       >
                         <v-icon>mdi-minus</v-icon>
                       </v-btn>
-                      <span class="mx-2">{{ item.quantity }}</span>
+                      <span class="mx-2 quantity-number">{{ item.quantity }}</span>
                       <v-btn
                         icon
                         size="small"
@@ -372,6 +372,11 @@ const removeFromCart = (medicationId) => {
 :deep(.category-menu .v-list-item) {
   background-color: white !important;
   color: #1e3a8a !important;
+}
+
+.quantity-number {
+  color: #1e3a8a !important;
+  font-weight: bold;
 }
 </style>
 
