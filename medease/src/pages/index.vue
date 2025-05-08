@@ -18,7 +18,7 @@
               Book appointments, manage your health, and connect with top doctors—all in one seamless platform. Experience healthcare reimagined for you.
             </p>
             <div class="modern-cta-group mb-8">
-              <v-btn color="#0ea5e9" class="modern-cta-btn mr-4" size="x-large" elevation="4">Get Started</v-btn>
+              <v-btn color="#0ea5e9" class="modern-cta-btn mr-4" size="x-large" elevation="4" @click="$router.push('/signIn')">Get Started</v-btn>
               <v-btn variant="outlined" color="#0ea5e9" class="modern-cta-btn" size="large" @click="$router.push('/Pharmacy')">Visit Pharmacy</v-btn>
             </div>
             <div class="trusted-bar mt-6">

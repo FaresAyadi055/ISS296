@@ -18,8 +18,9 @@
               Book appointments, manage your health, and connect with top doctors—all in one seamless platform. Experience healthcare reimagined for you.
             </p>
             <div class="modern-cta-group mb-8">
-              <v-btn color="#0ea5e9" class="modern-cta-btn mr-4" size="x-large" elevation="4">Get Started</v-btn>
-              <v-btn variant="outlined" color="#0ea5e9" class="modern-cta-btn" size="large" @click="$router.push('/Pharmacy')">Visit Pharmacy</v-btn>
+              <v-btn variant="outlined" color="#0ea5e9" class="modern-cta-btn d-flex justify-center align-center" size="large" @click="$router.push('/Pharmacy')">
+                <span class="flex-grow-1 text-center">Visit Pharmacy</span>
+              </v-btn>
             </div>
             <div class="trusted-bar mt-6">
               <v-icon color="#0ea5e9" size="20" class="mr-1">mdi-shield-check</v-icon>
@@ -323,14 +324,6 @@ function isUserLoggedIn() {
   // Check for both token and patient in localStorage, as used in navbarAuthPatient.vue
   return !!(localStorage.getItem('token') && localStorage.getItem('patient'));
 }
-
-const handleGetStarted = () => {
-  if (isUserLoggedIn()) {
-    router.push('/booking');
-  } else {
-    router.push('/signInPatient');
-  }
-};
 
 onMounted(() => {
   fetchDailyQuote()
