@@ -34,19 +34,30 @@
             <div v-for="day in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']" :key="day" class="mb-4">
               <h3 class="text-capitalize mb-2">{{ day }}</h3>
               <div v-if="workingHours[day].length === 0">
-                <v-btn @click="addHour(day)" color="green" class="mb-4">Add Working Hour for {{ day }}</v-btn>
+                <v-btn @click="addHour(day)" class="modern-add-hour-btn mb-4" color="primary" rounded>
+                  <v-icon left size="20">mdi-plus</v-icon>
+                  Add Working Hour for {{ day }}
+                </v-btn>
               </div>
-              <v-row v-else v-for="(hour, index) in workingHours[day]" :key="index" align="center">
+              <v-row v-else v-for="(hour, index) in workingHours[day]" :key="index" align="center" class="align-center mb-2">
                 <v-col>
-                  <v-text-field v-model="hour.startTime" label="Start Time" type="time" required></v-text-field>
+                  <v-text-field v-model="hour.startTime" label="Start Time" type="time" required class="modern-input"></v-text-field>
                 </v-col>
                 <v-col>
-                  <v-text-field v-model="hour.endTime" label="End Time" type="time" required></v-text-field>
+                  <v-text-field v-model="hour.endTime" label="End Time" type="time" required class="modern-input"></v-text-field>
                 </v-col>
-                <v-col>
-                  <v-btn @click="removeHour(day, index)" color="red">Remove</v-btn>
+                <v-col class="d-flex align-center">
+                  <v-btn @click="removeHour(day, index)" class="modern-remove-hour-btn" icon variant="text">
+                    <v-icon color="red">mdi-delete</v-icon>
+                  </v-btn>
                 </v-col>
               </v-row>
+              <div v-if="workingHours[day].length > 0">
+                <v-btn @click="addHour(day)" class="modern-add-hour-btn mt-2" color="primary" rounded variant="outlined">
+                  <v-icon left size="20">mdi-plus</v-icon>
+                  Add Another Hour
+                </v-btn>
+              </div>
             </div>
           </v-container>
 
@@ -205,5 +216,36 @@ const handleRequest = async () => {
   width: 600px;
   margin: auto;
   background-color: white;
+}
+
+.modern-add-hour-btn {
+  background: linear-gradient(90deg, #0ea5e9 0%, #38bdf8 100%) !important;
+  color: #fff !important;
+  border-radius: 25px !important;
+  font-weight: 600;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px 0 rgba(14, 165, 233, 0.10);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.modern-add-hour-btn:hover {
+  background: linear-gradient(90deg, #0284c7 0%, #0ea5e9 100%) !important;
+  box-shadow: 0 4px 16px 0 rgba(14, 165, 233, 0.16);
+}
+.modern-remove-hour-btn {
+  border-radius: 50% !important;
+  background: #ffeaea !important;
+  color: #e53935 !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  width: 36px !important;
+  height: 36px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+}
+.modern-remove-hour-btn:hover {
+  background: #ffbdbd !important;
+  color: #b71c1c !important;
 }
 </style>

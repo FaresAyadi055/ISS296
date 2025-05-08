@@ -5,26 +5,90 @@
     <v-main>
       <v-container>
         
-        <v-row class="d-flex align-center mt-8 mb-16">
-          <v-col cols="12" md="6" class="pr-10">
-            <h1 class="text-h2 font-weight-black mb-6" style="color: #1e3a8a;">
-              Take care of your<br>
-              <span style="color: #0ea5e9;">health in time</span>
+        <v-row class="d-flex align-center mt-8 mb-16 modern-hero-row creative-hero-bg">
+          <v-col cols="12" md="6" class="pr-10 modern-hero-text">
+            <div class="modern-badge mb-4">
+              <v-icon color="#0ea5e9" size="22" class="mr-2">mdi-heart-pulse</v-icon>
+              <span>Welcome to MedEase</span>
+            </div>
+            <h1 class="modern-title mb-6">
+              Your Health, <span class="modern-highlight">Your Way</span>
             </h1>
-            <p class="text-h5 mb-8" style="color: #64748b; line-height: 1.7;">
-              Connect with trusted healthcare professionals anytime,<br>
-              anywhere with our easy-to-use web application
+            <p class="modern-subtitle mb-8">
+              Book appointments, manage your health, and connect with top doctors—all in one seamless platform. Experience healthcare reimagined for you.
             </p>
-            
+            <div class="modern-cta-group mb-8">
+              <v-btn color="#0ea5e9" class="modern-cta-btn mr-4" size="x-large" elevation="4">Get Started</v-btn>
+              <v-btn variant="outlined" color="#0ea5e9" class="modern-cta-btn" size="large" @click="$router.push('/Pharmacy')">Visit Pharmacy</v-btn>
+            </div>
+            <div class="trusted-bar mt-6">
+              <v-icon color="#0ea5e9" size="20" class="mr-1">mdi-shield-check</v-icon>
+              <span>Trusted by 200,000+ users</span>
+              <v-avatar size="28" class="ml-2 mr-1"><v-img src="https://randomuser.me/api/portraits/men/32.jpg" /></v-avatar>
+              <v-avatar size="28" class="mr-1"><v-img src="https://randomuser.me/api/portraits/women/44.jpg" /></v-avatar>
+              <v-avatar size="28"><v-img src="https://randomuser.me/api/portraits/men/76.jpg" /></v-avatar>
+            </div>
           </v-col>
+          <v-col cols="12" md="6" class="modern-hero-image-col">
+            <div class="modern-hero-image-wrapper">
+              <v-img
+                :src="doctorIllustration"
+                contain
+                max-height="520"
+                class="modern-hero-image"
+              ></v-img>
+              <div class="modern-hero-bubble modern-hero-bubble-1">
+                <v-icon color="#0ea5e9" size="28">mdi-star</v-icon>
+                <span>4.9/5 Avg. Rating</span>
+              </div>
+              <div class="modern-hero-bubble modern-hero-bubble-3">
+                <v-icon color="#0ea5e9" size="28">mdi-rocket-launch</v-icon>
+                <span>Book in 30s</span>
+              </div>
+            </div>
+          </v-col>
+        </v-row>
 
-          <v-col cols="12" md="6">
-            <v-img
-              :src="doctorIllustration"
-              contain
-              max-height="600"
-            ></v-img>
+        
+        <v-row class="my-16 py-16 how-to-use-row modern-how-to-use" style="background: linear-gradient(120deg, #f0f9ff 60%, #e0f2fe 100%); border-radius: 32px; box-shadow: 0 8px 32px 0 rgba(14,165,233,0.07); position: relative; overflow: hidden;">
+          <div class="modern-howto-bg-shape"></div>
+          <v-col cols="12" class="text-center mb-10">
+            <h2 class="text-h3 font-weight-black mb-4 modern-howto-title">
+              How to Use <span class="modern-highlight">MedEase</span>
+            </h2>
+            <p class="text-h5 modern-howto-desc">
+              Start your healthcare journey in just three easy steps
+            </p>
           </v-col>
+          <v-col cols="12" md="4" class="d-flex flex-column align-center mb-8 modern-howto-step">
+            <div class="modern-howto-icon mb-4">
+              <v-icon size="44" color="#0ea5e9">mdi-account-plus</v-icon>
+            </div>
+            <h3 class="text-h5 font-weight-bold mb-2 modern-howto-step-title">Sign Up or Log In</h3>
+            <p class="text-body-1 modern-howto-step-desc">
+              Create your free account or log in to unlock all features and manage your health with ease.
+            </p>
+          </v-col>
+          <v-col cols="12" md="4" class="d-flex flex-column align-center mb-8 modern-howto-step">
+            <div class="modern-howto-icon mb-4">
+              <v-icon size="44" color="#0ea5e9">mdi-calendar-check</v-icon>
+            </div>
+            <h3 class="text-h5 font-weight-bold mb-2 modern-howto-step-title">Book Instantly</h3>
+            <p class="text-body-1 modern-howto-step-desc">
+              Search, compare, and book appointments with top doctors in seconds—no waiting, no hassle.
+            </p>
+          </v-col>
+          <v-col cols="12" md="4" class="d-flex flex-column align-center mb-8 modern-howto-step">
+            <div class="modern-howto-icon mb-4">
+              <v-icon size="44" color="#0ea5e9">mdi-bell-alert</v-icon>
+            </div>
+            <h3 class="text-h5 font-weight-bold mb-2 modern-howto-step-title">Stay on Track</h3>
+            <p class="text-body-1 modern-howto-step-desc">
+              Get smart reminders, manage prescriptions, and enjoy seamless, personalized care.
+            </p>
+          </v-col>
+          <div class="modern-howto-connector modern-howto-connector-1"></div>
+          <div class="modern-howto-connector modern-howto-connector-2"></div>
         </v-row>
 
         
@@ -199,9 +263,20 @@ const fetchDailyQuote = async () => {
       dailyQuote.value = response.data.choices[0].message.content.trim()
     } else {
       quoteError.value = 'Could not load quote.'
+      console.error('Daily quote API: Unexpected response format', response.data)
     }
   } catch (e) {
     quoteError.value = 'Could not load quote.'
+    if (e.response) {
+      // Server responded with a status code outside 2xx
+      console.error('Daily quote API error:', e.response.status, e.response.data)
+    } else if (e.request) {
+      // No response received
+      console.error('Daily quote API: No response received', e.request)
+    } else {
+      // Other errors
+      console.error('Daily quote API: Error', e.message)
+    }
   } finally {
     quoteLoading.value = false
   }
@@ -365,5 +440,253 @@ function scrollReviews(direction) {
   font-size: 1rem;
   color: #334155;
   min-height: 70px;
+}
+
+.modern-hero-row {
+  min-height: 520px;
+  background: linear-gradient(90deg, #e0f2fe 0%, #f8fafc 100%);
+  border-radius: 32px;
+  box-shadow: 0 8px 32px 0 rgba(14, 165, 233, 0.08);
+  padding: 32px 0 32px 0;
+}
+.modern-hero-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.modern-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #e0f2fe;
+  color: #0ea5e9;
+  font-weight: 600;
+  font-size: 1.1rem;
+  border-radius: 999px;
+  padding: 6px 18px;
+  letter-spacing: 0.02em;
+}
+.modern-title {
+  font-size: 2.8rem;
+  font-weight: 900;
+  color: #1e3a8a;
+  line-height: 1.1;
+}
+.modern-highlight {
+  color: #0ea5e9;
+  background: linear-gradient(90deg, #0ea5e9 0%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.modern-subtitle {
+  color: #64748b;
+  font-size: 1.25rem;
+  line-height: 1.7;
+  max-width: 480px;
+}
+.modern-cta-group {
+  margin-top: 18px;
+}
+.modern-cta-btn {
+  font-size: 1.1rem;
+  font-weight: 700;
+  border-radius: 12px;
+  padding: 12px 32px !important;
+  transition: background 0.2s, color 0.2s;
+}
+.modern-cta-btn:hover {
+  background: #38bdf8 !important;
+  color: #fff !important;
+}
+.modern-hero-image-col {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modern-hero-image-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+}
+.modern-hero-image {
+  border-radius: 24px;
+  box-shadow: 0 4px 32px 0 rgba(14, 165, 233, 0.10);
+}
+.modern-hero-bubble {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  background: #fff;
+  color: #0ea5e9;
+  font-weight: 600;
+  border-radius: 999px;
+  box-shadow: 0 2px 12px 0 rgba(14, 165, 233, 0.10);
+  padding: 8px 18px;
+  font-size: 1rem;
+  z-index: 2;
+  white-space: nowrap;
+}
+.modern-hero-bubble-1 {
+  left: -32px;
+  top: 40px;
+}
+.modern-hero-bubble-3 {
+  left: 50%;
+  bottom: -32px;
+  transform: translateX(-50%);
+}
+.modern-hero-features {
+  gap: 0 18px;
+}
+.feature-box {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px 0 rgba(14, 165, 233, 0.07);
+  padding: 10px 22px;
+  font-weight: 600;
+  color: #0ea5e9;
+  font-size: 1.08rem;
+  min-width: 170px;
+}
+.creative-hero-bg {
+  background: linear-gradient(120deg, #e0f2fe 0%, #f8fafc 60%, #bae6fd 100%);
+  position: relative;
+  overflow: hidden;
+}
+.creative-hero-bg::before {
+  content: '';
+  position: absolute;
+  right: -120px;
+  top: 60px;
+  width: 340px;
+  height: 340px;
+  background: radial-gradient(circle, #0ea5e9 0%, #38bdf8 60%, transparent 100%);
+  opacity: 0.08;
+  z-index: 0;
+  border-radius: 50%;
+}
+.trusted-bar {
+  display: flex;
+  align-items: center;
+  background: #e0f2fe;
+  color: #0ea5e9;
+  font-weight: 600;
+  font-size: 1.08rem;
+  border-radius: 999px;
+  padding: 7px 22px;
+  box-shadow: 0 2px 12px 0 rgba(14, 165, 233, 0.07);
+  width: fit-content;
+}
+.modern-how-to-use {
+  position: relative;
+  margin-bottom: 64px;
+  margin-top: 64px;
+  padding-top: 64px;
+  padding-bottom: 64px;
+  overflow: visible;
+}
+.modern-howto-title {
+  color: #1e3a8a;
+  font-size: 2.5rem;
+  letter-spacing: -1px;
+}
+.modern-howto-desc {
+  color: #64748b;
+  font-size: 1.2rem;
+  margin-bottom: 0;
+}
+.modern-howto-step {
+  position: relative;
+  z-index: 2;
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 2px 16px 0 rgba(14,165,233,0.06);
+  padding: 36px 18px 32px 18px;
+  min-height: 320px;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.modern-howto-step:hover {
+  box-shadow: 0 8px 32px 0 rgba(14,165,233,0.13);
+  transform: translateY(-6px) scale(1.03);
+}
+.modern-howto-icon {
+  background: linear-gradient(120deg, #e0f2fe 60%, #bae6fd 100%);
+  border-radius: 50%;
+  width: 84px;
+  height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 12px 0 rgba(14,165,233,0.10);
+}
+.modern-howto-step-title {
+  color: #0ea5e9;
+  font-size: 1.25rem;
+}
+.modern-howto-step-desc {
+  color: #64748b;
+  font-size: 1.08rem;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.modern-howto-bg-shape {
+  position: absolute;
+  left: -120px;
+  top: 40px;
+  width: 340px;
+  height: 340px;
+  background: radial-gradient(circle, #0ea5e9 0%, #38bdf8 60%, transparent 100%);
+  opacity: 0.07;
+  z-index: 0;
+  border-radius: 50%;
+}
+.modern-howto-connector {
+  position: absolute;
+  top: 180px;
+  width: 30%;
+  height: 4px;
+  background: linear-gradient(90deg, #0ea5e9 0%, #38bdf8 100%);
+  opacity: 0.13;
+  border-radius: 2px;
+  z-index: 1;
+}
+.modern-howto-connector-1 {
+  left: 18%;
+}
+.modern-howto-connector-2 {
+  left: 52%;
+}
+@media (max-width: 960px) {
+  .modern-title {
+    font-size: 2rem !important;
+  }
+  .modern-hero-row {
+    padding: 16px 0 16px 0;
+  }
+  .modern-hero-image-wrapper {
+    max-width: 320px;
+  }
+  .modern-hero-features {
+    flex-direction: column;
+    gap: 12px 0;
+  }
+  .feature-box {
+    min-width: 0;
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .modern-howto-title {
+    font-size: 1.5rem !important;
+  }
+  .modern-howto-step {
+    min-height: 220px;
+    padding: 24px 8px 20px 8px;
+  }
+  .modern-howto-connector {
+    display: none;
+  }
 }
 </style>
