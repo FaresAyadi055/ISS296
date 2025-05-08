@@ -1,14 +1,12 @@
 <template>
-  <v-app style="background-color: #f8fafc;">
+  <v-app style="background: linear-gradient(135deg, #e3f0ff 0%, #f8fafc 100%); min-height: 100vh;">
     <navbar-auth-patient v-if="isUserLoggedIn()" app />
     <navbar v-else app />
     <v-main>
       <v-container class="d-flex flex-column align-center justify-center" style="min-height: 80vh;">
-        <v-card class="pa-8" max-width="420" elevation="10" style="border-radius: 20px;">
-          <v-card-title class="headline text-center mb-2" style="color: #1976D2;">Pay for Your Appointment</v-card-title>
-          <v-card-subtitle class="text-center mb-4" style="color: #607D8B; font-size: 1.1rem;">
-            Secure payment powered by Medease
-          </v-card-subtitle>
+        <v-card class="pa-8 payment-card" max-width="440" elevation="12">
+          <v-card-title class="headline text-center mb-2" style="color: #1976D2; font-weight: 700; letter-spacing: 0.02em;">Pay for Your Appointment</v-card-title>
+          <v-card-subtitle class="text-center mb-4" style="color: #607D8B; font-size: 1.1rem;">Secure payment powered by Medease</v-card-subtitle>
           <v-divider class="mb-4"></v-divider>
           <v-form ref="form" v-model="valid" lazy-validation>
             <v-text-field
@@ -57,23 +55,27 @@
               :rules="[v => v.length > 0 || 'Required']"
             />
           </v-form>
-          <div v-if="error" class="text-red mt-2 text-center">{{ error }}</div>
+          <transition name="fade">
+            <div v-if="error" class="error-message text-center">{{ error }}</div>
+          </transition>
           <v-divider class="my-4"></v-divider>
           <v-card-actions class="d-flex justify-center">
-            <v-btn color="primary" :loading="loading" @click="submitPayment" class="px-8 py-2" style="border-radius: 25px; font-weight: bold; font-size: 1.1rem;">Pay Now</v-btn>
-            <v-btn color="grey" @click="cancelPayment" class="px-6 py-2 ml-2" style="border-radius: 25px; font-weight: bold;">Cancel</v-btn>
+            <v-btn color="primary" :loading="loading" @click="submitPayment" class="pay-btn px-8 py-2">Pay Now</v-btn>
+            <v-btn color="grey" @click="cancelPayment" class="cancel-btn px-6 py-2 ml-2">Cancel</v-btn>
           </v-card-actions>
-          <div class="text-center mt-4" style="color: #90caf9; font-size: 0.95rem;">
+          <div class="text-center mt-4 secure-info">
             <v-icon color="success" size="18">mdi-lock</v-icon>
             Your payment is encrypted and secure
           </div>
         </v-card>
         <v-dialog v-model="successDialog" max-width="400px">
-          <v-card style="border-radius: 18px;">
+          <v-card style="border-radius: 18px; background: #fff;">
             <v-card-title class="headline text-center" style="color: #43a047;">Payment Successful!</v-card-title>
-            <v-card-text class="text-center">
+            <v-card-text class="text-center" style="color: #222;">
               <v-icon color="success" size="60">mdi-check-circle</v-icon>
-              <p class="mt-2">Your payment has been processed.<br>Thank you for using Medease!</p>
+              <p class="mt-2" style="color: #222;">
+                Your payment has been processed.<br>Thank you for using Medease!
+              </p>
             </v-card-text>
             <v-card-actions class="d-flex justify-center">
               <v-btn color="primary" @click="goToHome" style="border-radius: 25px; font-weight: bold;">Go to Home</v-btn>
@@ -89,6 +91,7 @@
 <script setup>
 import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import axios from 'axios';
 import NavbarAuthPatient from '@/components/navbarAuthPatient.vue';
 import Navbar from '@/components/navbar.vue';
 import Footer from '@/components/footer.vue';
@@ -122,10 +125,20 @@ async function submitPayment() {
     return;
   }
   loading.value = true;
-  setTimeout(() => {
-    loading.value = false;
+  try {
+    // Simulate payment processing delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Update appointment as paid in backend
+    if (appointmentId) {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      await axios.patch(`${apiUrl}/api/appointments/${appointmentId}/pay`);
+    }
     successDialog.value = true;
-  }, 1500); // Simulate payment processing
+  } catch (e) {
+    error.value = 'Payment succeeded but failed to update appointment status.';
+  } finally {
+    loading.value = false;
+  }
 }
 
 function cancelPayment() {
@@ -153,22 +166,94 @@ watch(expiry, formatExpiry);
 </script>
 
 <style scoped>
-.text-red {
-  color: #e53935;
+.payment-card {
+  border-radius: 24px;
+  box-shadow: 0 8px 32px 0 rgba(25, 118, 210, 0.10) !important;
+  background: #fff;
+  border: 1.5px solid #e3f0ff;
+  transition: box-shadow 0.2s;
 }
-.v-card {
-  box-shadow: 0 6px 24px 0 rgba(25, 118, 210, 0.08) !important;
+.payment-card:hover {
+  box-shadow: 0 12px 36px 0 rgba(25, 118, 210, 0.16) !important;
 }
-.v-btn.primary {
+.pay-btn {
   background: linear-gradient(90deg, #1976D2 0%, #64b5f6 100%) !important;
   color: #fff !important;
+  border-radius: 25px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  box-shadow: 0 2px 8px 0 rgba(25, 118, 210, 0.10);
+  transition: background 0.2s, box-shadow 0.2s;
 }
-.v-btn.grey {
-  background: #ececec !important;
+.pay-btn:hover {
+  background: linear-gradient(90deg, #1565c0 0%, #42a5f5 100%) !important;
+  box-shadow: 0 4px 16px 0 rgba(25, 118, 210, 0.16);
+}
+.cancel-btn {
+  background: #f5f5f5 !important;
   color: #607D8B !important;
+  border-radius: 25px;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+.cancel-btn:hover {
+  background: #e0e0e0 !important;
 }
 .v-text-field input {
   font-size: 1.1rem;
   letter-spacing: 0.05em;
+  background: #f1f3f6;
+  border-radius: 10px;
+  border: 1.5px solid #d0d7e2;
+  color: #000;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+.v-text-field input:focus {
+  border: 1.5px solid #1976D2;
+  box-shadow: 0 0 0 2px #e3f0ff;
+}
+/* Force black text and icons in v-text-field for Vuetify 3, even in dark mode */
+:deep(.v-text-field input),
+:deep(.v-text-field .v-label),
+:deep(.v-text-field .v-field__input),
+:deep(.v-text-field .v-field__outline),
+:deep(.v-text-field .v-icon),
+:deep(.v-text-field .v-input__icon),
+:deep(.v-text-field .v-icon__svg) {
+  color: #000 !important;
+  fill: #000 !important;
+}
+:deep(.v-text-field input) {
+  caret-color: #000 !important;
+}
+:deep(.v-text-field .v-label),
+:deep(.v-text-field .v-field__input),
+:deep(.v-text-field .v-field__outline) {
+  color: #000 !important;
+}
+.error-message {
+  color: #e53935;
+  background: #fff0f0;
+  border-radius: 8px;
+  padding: 8px 0;
+  margin-bottom: 8px;
+  font-weight: 500;
+  font-size: 1.05rem;
+  box-shadow: 0 2px 8px 0 rgba(229, 57, 53, 0.04);
+}
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+.secure-info {
+  color: #1976D2;
+  font-size: 0.98rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 </style>
