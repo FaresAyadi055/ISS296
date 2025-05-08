@@ -17,7 +17,7 @@ const app = express();
 app.use(cors({
   origin: ['http://localhost:5173', 'http://localhost:3000'],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'], // Added 'PATCH'
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
@@ -291,7 +291,8 @@ const appointmentSchema = new mongoose.Schema({
   time: { type: String, required: true },
   patientId: { type: String, required: true },
   date: { type: String, required: true }, // Add the date field
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  paid: { type: Boolean, default: false } // Add paid field
 });
 
 const Appointment = mongoose.model('Appointment', appointmentSchema);
@@ -344,6 +345,23 @@ app.delete('/api/appointments/:id', async (req, res) => {
   try {
     await Appointment.findByIdAndDelete(req.params.id);
     res.json({ message: 'Appointment deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Add this route to update payment status of an appointment
+app.patch('/api/appointments/:id/pay', async (req, res) => {
+  try {
+    const appointment = await Appointment.findByIdAndUpdate(
+      req.params.id,
+      { $set: { paid: true } },
+      { new: true }
+    );
+    if (!appointment) {
+      return res.status(404).json({ message: 'Appointment not found' });
+    }
+    res.json(appointment);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
