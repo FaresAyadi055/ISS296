@@ -16,6 +16,7 @@ import Booking from '@/pages/booking.vue';
 import EPrescription from '@/components/EPrescription.vue'
 import PatientProfile from '@/components/PatientProfile.vue'
 import Pharmacy from '@/pages/Pharmacy.vue'
+import Checkout from '@/pages/Checkout.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -78,6 +79,11 @@ const router = createRouter({
     {
       path: '/bookingPagePatient/:doctorId',
       component: () => import('@/pages/BookingPage.vue')
+    },
+    {
+      path: '/checkout',
+      name: 'Checkout',
+      component: Checkout
     }
   ]),
 })
@@ -100,5 +106,10 @@ router.onError((err, to) => {
 router.isReady().then(() => {
   localStorage.removeItem('vuetify:dynamic-reload')
 })
+
+const goToPharmacy = () => {
+  showSuccessDialog.value = false;
+  router.push('/pharmacy');
+};
 
 export default router

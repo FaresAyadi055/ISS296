@@ -220,7 +220,7 @@
                         size="small"
                         variant="text"
                         color="primary"
-                        @click="item.quantity > 1 && item.quantity--"
+                        @click="item.quantity > 1 && updateQuantity(item._id, item.quantity - 1)"
                         :disabled="item.quantity <= 1"
                       >
                         <v-icon>mdi-minus</v-icon>
@@ -231,7 +231,7 @@
                         size="small"
                         variant="text"
                         color="primary"
-                        @click="item.quantity++"
+                        @click="updateQuantity(item._id, item.quantity + 1)"
                       >
                         <v-icon>mdi-plus</v-icon>
                       </v-btn>
@@ -275,10 +275,13 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import axios from 'axios'
 import NavBarDoctor from '@/components/navbardoctor.vue'
 import NavBar from '@/components/navbarAuthPatient.vue'
 import Footer from '@/components/footer.vue'
+
+const router = useRouter()
 
 // State
 const search = ref('')
@@ -289,11 +292,51 @@ const medications = ref([]);
 const loading = ref(true);
 const cart = ref([]);
 const showCart = ref(false);
+const patientId = ref(null);
 
 // Check if user is doctor
 const isDoctor = computed(() => {
   return localStorage.getItem('doctor') !== null
 })
+
+// Get patient ID from localStorage
+onMounted(() => {
+  const patientData = localStorage.getItem('patient');
+  console.log('Stored patient data:', patientData); // Debug log
+  if (patientData) {
+    try {
+      const parsedData = JSON.parse(patientData);
+      console.log('Parsed patient data:', parsedData); // Debug log
+      patientId.value = parsedData._id || parsedData.id; // Try both _id and id
+      console.log('Set patient ID:', patientId.value); // Debug log
+      if (patientId.value) {
+        loadCart(); // Load cart when component mounts
+      } else {
+        console.error('No patient ID found in stored data');
+      }
+    } catch (error) {
+      console.error('Error parsing patient data:', error);
+    }
+  } else {
+    console.log('No patient data found in localStorage');
+  }
+});
+
+// Load cart from backend
+const loadCart = async () => {
+  if (!patientId.value) return;
+  
+  try {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const response = await axios.get(`${apiUrl}/api/patients/${patientId.value}/cart`);
+    cart.value = response.data.map(item => ({
+      ...item.medicationId,
+      quantity: item.quantity
+    }));
+  } catch (error) {
+    console.error('Error loading cart:', error);
+  }
+};
 
 // Categories
 const categories = [
@@ -339,18 +382,89 @@ const showMedicationDetails = (medication) => {
 }
 
 // Add to cart function
-const addToCart = (medication) => {
-  const existing = cart.value.find(item => item._id === medication._id);
-  if (existing) {
-    existing.quantity += 1;
-  } else {
-    cart.value.push({ ...medication, quantity: 1 });
+const addToCart = async (medication) => {
+  console.log('Current patientId:', patientId.value); // Debug log
+  if (!patientId.value) {
+    const patientData = localStorage.getItem('patient');
+    console.log('Retrying patient data retrieval:', patientData); // Debug log
+    if (patientData) {
+      try {
+        const parsedData = JSON.parse(patientData);
+        patientId.value = parsedData._id || parsedData.id;
+        console.log('Updated patientId:', patientId.value); // Debug log
+      } catch (error) {
+        console.error('Error parsing patient data:', error);
+      }
+    }
+  }
+
+  if (!patientId.value) {
+    alert('Please log in to add items to cart');
+    return;
+  }
+
+  try {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    console.log('Adding to cart for patient:', patientId.value); // Debug log
+    const response = await axios.post(`${apiUrl}/api/patients/${patientId.value}/cart`, {
+      medicationId: medication._id,
+      quantity: 1
+    });
+    
+    // Update local cart state
+    const existingItem = cart.value.find(item => item._id === medication._id);
+    if (existingItem) {
+      existingItem.quantity += 1;
+    } else {
+      cart.value.push({ ...medication, quantity: 1 });
+    }
+  } catch (error) {
+    console.error('Error adding to cart:', error);
+    alert('Error adding item to cart');
   }
 };
 
 // Remove from cart function
-const removeFromCart = (medicationId) => {
-  cart.value = cart.value.filter(item => item._id !== medicationId);
+const removeFromCart = async (medicationId) => {
+  if (!patientId.value) return;
+
+  try {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    await axios.delete(`${apiUrl}/api/patients/${patientId.value}/cart/${medicationId}`);
+    cart.value = cart.value.filter(item => item._id !== medicationId);
+  } catch (error) {
+    console.error('Error removing from cart:', error);
+    alert('Error removing item from cart');
+  }
+};
+
+// Update quantity function
+const updateQuantity = async (medicationId, newQuantity) => {
+  if (!patientId.value) return;
+
+  try {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    await axios.put(`${apiUrl}/api/patients/${patientId.value}/cart/${medicationId}`, {
+      quantity: newQuantity
+    });
+    
+    const item = cart.value.find(item => item._id === medicationId);
+    if (item) {
+      item.quantity = newQuantity;
+    }
+  } catch (error) {
+    console.error('Error updating quantity:', error);
+    alert('Error updating quantity');
+  }
+};
+
+// Checkout function
+const checkout = () => {
+  if (!patientId.value) {
+    alert('Please log in to checkout');
+    return;
+  }
+  router.push('/checkout');
 };
 </script>
 

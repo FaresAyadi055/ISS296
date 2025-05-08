@@ -77,7 +77,11 @@ const patientSchema = new mongoose.Schema({
     allergies: String,
     reminders: { type: Array, default: [] }
   },
-  photo: String
+  photo: String,
+  cart: [{
+    medicationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Medication' },
+    quantity: { type: Number, default: 1 }
+  }]
 });
 
 // Hospital Schema
@@ -628,6 +632,237 @@ app.delete('/api/hospitals/:id', async (req, res) => {
     res.json({ message: 'Hospital deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+// Cart Management Routes
+app.get('/api/patients/:id/cart', async (req, res) => {
+  try {
+    const patient = await Patient.findById(req.params.id).populate('cart.medicationId');
+    if (!patient) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+    res.json(patient.cart);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching cart' });
+  }
+});
+
+app.post('/api/patients/:id/cart', async (req, res) => {
+  try {
+    const { medicationId, quantity } = req.body;
+    const patient = await Patient.findById(req.params.id);
+    
+    if (!patient) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+
+    // Check if medication already exists in cart
+    const existingItem = patient.cart.find(item => 
+      item.medicationId.toString() === medicationId
+    );
+
+    if (existingItem) {
+      existingItem.quantity += quantity;
+    } else {
+      patient.cart.push({ medicationId, quantity });
+    }
+
+    await patient.save();
+    const updatedPatient = await Patient.findById(req.params.id).populate('cart.medicationId');
+    res.json(updatedPatient.cart);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating cart' });
+  }
+});
+
+app.put('/api/patients/:id/cart/:medicationId', async (req, res) => {
+  try {
+    const { quantity } = req.body;
+    const patient = await Patient.findById(req.params.id);
+    
+    if (!patient) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+
+    const cartItem = patient.cart.find(item => 
+      item.medicationId.toString() === req.params.medicationId
+    );
+
+    if (!cartItem) {
+      return res.status(404).json({ message: 'Item not found in cart' });
+    }
+
+    cartItem.quantity = quantity;
+    await patient.save();
+    
+    const updatedPatient = await Patient.findById(req.params.id).populate('cart.medicationId');
+    res.json(updatedPatient.cart);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating cart item' });
+  }
+});
+
+app.delete('/api/patients/:id/cart/:medicationId', async (req, res) => {
+  try {
+    const patient = await Patient.findById(req.params.id);
+    
+    if (!patient) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+
+    patient.cart = patient.cart.filter(item => 
+      item.medicationId.toString() !== req.params.medicationId
+    );
+
+    await patient.save();
+    res.json({ message: 'Item removed from cart' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error removing item from cart' });
+  }
+});
+
+app.delete('/api/patients/:id/cart', async (req, res) => {
+  try {
+    const patient = await Patient.findById(req.params.id);
+    
+    if (!patient) {
+      return res.status(404).json({ message: 'Patient not found' });
+    }
+
+    patient.cart = [];
+    await patient.save();
+    res.json({ message: 'Cart cleared' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error clearing cart' });
+  }
+});
+
+// Order Schema
+const orderSchema = new mongoose.Schema({
+  patientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Patient', required: true },
+  items: [{
+    medicationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Medication', required: true },
+    quantity: { type: Number, required: true },
+    price: { type: Number, required: true }
+  }],
+  deliveryAddress: { type: String, required: true },
+  phoneNumber: { type: String, required: true },
+  deliveryNotes: String,
+  paymentMethod: { type: String, enum: ['online', 'delivery'], required: true },
+  paymentDetails: {
+    cardNumber: String,
+    expiryDate: String,
+    cardName: String
+  },
+  total: { type: Number, required: true },
+  status: { 
+    type: String, 
+    enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
+    default: 'pending'
+  },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const Order = mongoose.model('Order', orderSchema);
+
+// Order Routes
+app.post('/api/orders', async (req, res) => {
+  try {
+    const order = new Order(req.body);
+    await order.save();
+
+    // Decrement stock for each medication in the order
+    for (const item of order.items) {
+      console.log('Decrementing stock for:', item.medicationId, 'by', item.quantity);
+      const med = await Medication.findByIdAndUpdate(
+        item.medicationId,
+        { $inc: { stock: -item.quantity } },
+        { new: true }
+      );
+      console.log('Updated medication:', med);
+    }
+
+    res.status(201).json(order);
+  } catch (error) {
+    console.error('Error creating order:', error);
+    res.status(400).json({ message: error.message });
+  }
+});
+
+app.get('/api/orders/patient/:patientId', async (req, res) => {
+  try {
+    const orders = await Order.find({ patientId: req.params.patientId })
+      .populate('items.medicationId')
+      .sort({ createdAt: -1 });
+    res.json(orders);
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.get('/api/orders/:id', async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id)
+      .populate('items.medicationId');
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    res.json(order);
+  } catch (error) {
+    console.error('Error fetching order:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.patch('/api/orders/:id/status', async (req, res) => {
+  try {
+    const { status } = req.body;
+    const order = await Order.findByIdAndUpdate(
+      req.params.id,
+      { $set: { status } },
+      { new: true }
+    );
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+    res.json(order);
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// TEMPORARY: Set all medication stock to 10 if missing or not a number
+app.post('/api/fix-medication-stock', async (req, res) => {
+  try {
+    const result = await Medication.updateMany(
+      { $or: [ { stock: { $exists: false } }, { stock: { $type: "string" } } ] },
+      { $set: { stock: 10 } }
+    );
+    // Also convert any non-number stock to number 10
+    const allMeds = await Medication.find();
+    for (const med of allMeds) {
+      if (typeof med.stock !== 'number') {
+        await Medication.updateOne({ _id: med._id }, { $set: { stock: 10 } });
+      }
+    }
+    res.json({ message: 'Stock field fixed for all medications', result });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Search medications by name (case-insensitive, partial match)
+app.get('/api/medications/search', async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) return res.status(400).json({ message: 'Query required' });
+    const meds = await Medication.find({ name: { $regex: q, $options: 'i' } });
+    res.json(meds);
+  } catch (error) {
+    res.status(500).json({ message: 'Error searching medications' });
   }
 });
 

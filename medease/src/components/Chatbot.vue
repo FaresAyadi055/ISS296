@@ -35,6 +35,22 @@
                 </v-btn>
               </div>
             </div>
+            <div v-else-if="message.type === 'medication'" class="medication-info">
+              <div>
+                <strong>{{ message.medication.name }}</strong> - {{ message.medication.price }} TND
+                <span v-if="message.medication.stock > 0" style="color: #16a34a;">(Available)</span>
+                <span v-else style="color: #dc2626;">(Unavailable)</span>
+              </div>
+              <v-btn
+                v-if="message.medication.stock > 0"
+                size="small"
+                color="primary"
+                @click="addMedicationToCart(message.medication)"
+                class="mt-2"
+              >
+                Add to Cart
+              </v-btn>
+            </div>
           </div>
           <div class="message-time">
             {{ message.time }}
@@ -152,9 +168,40 @@ const parseDayAndTime = (message) => {
   return { day, time };
 };
 
+// List of medication names (you can fetch this from the backend or keep it updated)
+const medicationNames = ref([]);
+
+const detectMedicationQuery = (message) => {
+  const lower = message.toLowerCase();
+  for (const med of medicationNames.value) {
+    if (
+      lower.includes(med) &&
+      (
+        lower.match(/price|cost|how much|available|availability|can i buy|give me|order|add|purchase|get|need|want/) ||
+        lower === med // direct mention
+      )
+    ) {
+      return med;
+    }
+  }
+  return null;
+};
+
+const medicalKeywords = [
+  'medicine', 'medication', 'pharmacy', 'doctor', 'health', 'symptom', 'treatment', 'prescription',
+  'pain', 'illness', 'disease', 'appointment', 'clinic', 'hospital', 'pill', 'tablet', 'capsule',
+  'side effect', 'dose', 'diagnosis', 'therapy', 'order', 'buy', 'purchase', 'pharmacist', 'refill',
+  // add more as needed
+];
+
+function isMedicalQuestion(message) {
+  const lower = message.toLowerCase();
+  return medicalKeywords.some(keyword => lower.includes(keyword));
+}
+
 // Function to send a message
 const sendMessage = async () => {
-  if (!newMessage.value.trim() || isLoading.value) return
+  if (!newMessage.value.trim() || isLoading.value) return;
 
   // Add user message
   messages.value.push({
@@ -162,10 +209,17 @@ const sendMessage = async () => {
     sender: 'user',
     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     type: 'text'
-  })
+  });
 
-  const userMessage = newMessage.value
-  newMessage.value = ''
+  const userMessage = newMessage.value;
+  newMessage.value = '';
+
+  // Detect medication queries (improved)
+  const medName = detectMedicationQuery(userMessage);
+  if (medName) {
+    await handleMedicationQuery(medName);
+    return;
+  }
 
   // Scroll to bottom
   await nextTick()
@@ -182,8 +236,23 @@ const sendMessage = async () => {
     matchesSpecialty
   ) {
     await handleDoctorQuery(userMessage)
+  } else if (isMedicalQuestion(userMessage)) {
+    const aiResponse = await getAIResponse(userMessage)
+    messages.value.push({
+      text: aiResponse,
+      sender: 'bot',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      type: 'text'
+    })
+    scrollToBottom()
   } else {
-    await getAIResponse(userMessage)
+    messages.value.push({
+      text: "I'm sorry, I can only assist with medical and pharmacy-related questions.",
+      sender: 'bot',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      type: 'text'
+    })
+    scrollToBottom()
   }
 }
 
@@ -270,7 +339,7 @@ const getAIResponse = async (message) => {
     const response = await axios.post(
       'https://openrouter.ai/api/v1/chat/completions',
       {
-        model: 'anthropic/claude-2',
+        model: 'deepseek/deepseek-prover-v2:free',
         messages: [
           {
             role: 'system',
@@ -286,7 +355,7 @@ const getAIResponse = async (message) => {
       },
       {
         headers: {
-          'Authorization': `Bearer ${API_CONFIG.API_KEY}`,
+          'Authorization': `Bearer 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`,
           'Content-Type': 'application/json',
           'HTTP-Referer': 'https://medease.com',
           'X-Title': 'MedEase'
@@ -297,9 +366,13 @@ const getAIResponse = async (message) => {
     console.log('Raw API Response:', response);
     console.log('Response Data:', response.data);
 
-    // Check if we have a valid response with the expected structure
     if (response.data && response.data.choices && response.data.choices.length > 0 && response.data.choices[0].message) {
       return response.data.choices[0].message.content.trim();
+    }
+
+    if (response.data && response.data.error) {
+      console.error('AI API error:', response.data.error);
+      return 'Sorry, I could not get an answer from the medical assistant at this time.';
     }
 
     // If we get here, the response format wasn't what we expected
@@ -353,9 +426,72 @@ const clearChat = () => {
   localStorage.removeItem('medease_chat_history');
 }
 
-onMounted(() => {
+const addMedicationToCart = async (med) => {
+  const patientData = localStorage.getItem('patient');
+  if (!patientData) {
+    alert('Please log in to add items to cart');
+    return;
+  }
+  const patientId = JSON.parse(patientData)._id || JSON.parse(patientData).id;
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  await axios.post(`${apiUrl}/api/patients/${patientId}/cart`, {
+    medicationId: med._id,
+    quantity: 1
+  });
+  alert(`${med.name} added to cart!`);
+};
+
+const handleMedicationQuery = async (medName) => {
+  isLoading.value = true;
+  try {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+    const response = await axios.get(`${apiUrl}/api/medications/search?q=${encodeURIComponent(medName)}`);
+    const med = response.data[0];
+    if (med) {
+      if (med.stock > 0) {
+        messages.value.push({
+          text: `The price of ${med.name} is ${med.price} TND. It is available.`,
+          sender: 'bot',
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          type: 'medication',
+          medication: med
+        });
+      } else {
+        messages.value.push({
+          text: `Sorry, ${medName} is not available at the moment in our pharmacy.`,
+          sender: 'bot',
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          type: 'text'
+        });
+      }
+    } else {
+      messages.value.push({
+        text: `Sorry, I couldn't find ${medName} in our pharmacy.`,
+        sender: 'bot',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        type: 'text'
+      });
+    }
+  } catch (error) {
+    messages.value.push({
+      text: 'Error searching for medication.',
+      sender: 'bot',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      type: 'text'
+    });
+  } finally {
+    isLoading.value = false;
+    scrollToBottom();
+  }
+};
+
+onMounted(async () => {
   // Initialize chat
   scrollToBottom()
+
+  const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const response = await axios.get(`${apiUrl}/api/medications`);
+  medicationNames.value = response.data.map(med => med.name.toLowerCase());
 })
 </script>
 
@@ -509,5 +645,13 @@ onMounted(() => {
 .booking-btn {
   font-size: 0.75rem;
   text-transform: none;
+}
+
+.medication-info {
+  margin-top: 16px;
+  padding: 12px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 </style> 
